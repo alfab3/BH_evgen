@@ -47,7 +47,7 @@ c	Set tagging interval
 	data E_hi,E_lo /8.8,8.6/
 c
 	data itest(1),itest(2),itest(3),itest(4),nevent 
-     &	/100000,1000000,10000000,100000000,1000000/
+     &	/100000,1000000,10000000,100000000,10/
 	data m_e,m_muon,m_pi,hbarc /0.000511,0.105658,0.139570,0.197/
 c	
 c  Histogram parameters
@@ -126,7 +126,7 @@ c
 c   Only one of the histogram logicals can be true, the rest must be false.   The event output can be turned on independent of histograming. 
 	hist_w		=.false.
 	hist_x		=.false.
-	hist_t		=.true. 
+	hist_t		=.false.
 	hist_phi_JT	=.false.
 	hist_log_t	=.false.
 	hist_Egamma	=.false.
