@@ -1,1 +1,0 @@
-double RandomReal(double LowerLimit, double UpperLimit);
