@@ -22,6 +22,7 @@
 
 #include "EnergyLookup.h"
 #include "RandomReal.h"
+#include "maxtest.h"
 
 
 const int N = 1e5; 
@@ -138,6 +139,7 @@ int main(){
 	std::clock_t start;
 	double duration;
 	start = std::clock();
+	method = 0; //0 for accept-reject 1 for metropolis
 
 
    //create a Tree file tree1.root                                                                                                                                                                   
@@ -206,16 +208,52 @@ cout << "break condition number " << breakCondition << "\n";*/
 //	  dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0)    <= breakCondition  ){
 //cout << "Hypergeometric result " << dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0) / 
 	  //dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0) << "\n";
+if(method == 0){
+	for(int n = 1; n <= N; n++){
+		x = RandomReal(ElectronMass/min_BeamEnergy, 1 - ElectronMass/max_BeamEnergy);
+		phi1 = RandomReal(0,2*M_PI);
+		phi2 = RandomReal(0,2*M_PI);
+		theta1 = 1/(RandomReal(1/max_theta,1/min_theta));
+		theta2 = 1/(RandomReal(1/max_theta,1/min_theta));
+		E0 = RandomReal(min_BeamEnergy, max_BeamEnergy);
+		while(dSigmaBorn(x, theta1, theta2, phi1, phi2, E0) < maxTest()){
+			x = RandomReal(ElectronMass/min_BeamEnergy, 1 - ElectronMass/max_BeamEnergy);
+			phi1 = RandomReal(0,2*M_PI);
+			phi2 = RandomReal(0,2*M_PI);
+			theta1 = 1/(RandomReal(1/max_theta,1/min_theta));
+			theta2 = 1/(RandomReal(1/max_theta,1/min_theta));
+			E0 = RandomReal(min_BeamEnergy, max_BeamEnergy);
+		}
+		
+	}
+	x_t = x;
+ 	theta1_t = theta1; theta2_t = theta2;
+ 	phi1_t = phi1; phi2_t = phi2;
+ 	E0_t = E0; Attempts_t = i;
+ 	ev_t = n; 
+	k1 = ThreeVec(theta1, phi1 * sqrt( pow(x,2) * pow(E0,2) - pow(ElectronMass,2));
+ 	k2 = ThreeVec(theta2, phi2 * sqrt( pow(1 - x,2) * pow(E0,2) - pow(ElectronMass,2));
+ 	p1.SetXYZM(k1.X(),k1.Y(),k1.Z(),ElectronMass);
+ 	p2.SetXYZM(k2.X(),k2.Y(),k2.Z(),ElectronMass);
+ 	BeamP4.SetXYZT(0,0,E0,E0);
+ 	t_t = -(BeamP4 - p1 - p2).Mag2();
+	Hist_t->Fill(t_t);
+	t1.Fill();
+	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
+    std::cout<<"printf: "<< duration <<'\n';
 
-for(int n = 1; n <= N; n++){
+	t1.Write();
+}
+if(method == 1){
+	for(int n = 1; n <= N; n++){
 //cout << phi2.Y() << "\n";	
 //double breakCondition = RandomReal(0,1);
-i = 1;
-	//while(dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0) / 
-	//	  (dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0) * RandomReal(0,1)) < 1 ) {
-	while( (dSigmaBorn(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0.X()) * EnergyLookup(E0.X()) ) / 
-		 (dSigmaBorn(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0.Y()) * EnergyLookup(E0.Y()) ) < RandomReal(0,1) ) {	
+		i = 1;
+	//while(dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0) //
+		//	  (dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0) * RandomReal(0,1)) < 1 ) {
+		while( (dSigmaBorn(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0.X()) * EnergyLookup(E0.X()) ) / 
+		 	(dSigmaBorn(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0.Y()) * EnergyLookup(E0.Y()) ) < RandomReal(0,1) ) {	
 		/*  	
 		cout << "Numerator = " << dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0) << "\n";
 		cout << "Denominator = " << dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0) << "\n";
@@ -243,47 +281,48 @@ i = 1;
 	//	  dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0) << "\n";
 
 
-	E0.SetX(RandomReal(min_BeamEnergy, max_BeamEnergy));
+			E0.SetX(RandomReal(min_BeamEnergy, max_BeamEnergy));
 
-	x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) )); //make a new value for x
-		while(x.X() < (ElectronMass/E0.X()) || x.X() > (1 - (ElectronMass/E0.X()) ))
-		{
- 			x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) ));
-		}
+			x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) )); //make a new value for x
+			while(x.X() < (ElectronMass/E0.X()) || x.X() > (1 - (ElectronMass/E0.X()) ))
+			{
+ 				x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) ));
+			}
 	//theta1.SetY(theta1.X());
-	theta1.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
+			theta1.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
 
 	//theta2.SetY(theta2.X());
-	theta2.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
+			theta2.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
 
 	//phi1.SetY(phi1.X());
-	phi1.SetX(RandomReal(0, 2*PI));
+			phi1.SetX(RandomReal(0, 2*PI));
 
 	//phi2.SetY(phi2.X());
-	phi2.SetX(RandomReal(0, 2*PI));
+			phi2.SetX(RandomReal(0, 2*PI));
 
-	i++; 
+			i++; 
+		}
 	}
 //cout << phi2.X() << "\n";	
- x_t = x.X();
- theta1_t = theta1.X(); theta2_t = theta2.X();
- phi1_t = phi1.X(); phi2_t = phi2.X();
- E0_t = E0.X(); Attempts_t = i;
- ev_t = n; 
- k1 = ThreeVec(theta1.X(), phi1.X()) * sqrt( pow(x.X(),2) * pow(E0.X(),2) - pow(ElectronMass,2));
- k2 = ThreeVec(theta2.X(), phi2.X()) * sqrt( pow(1 - x.X(),2) * pow(E0.X(),2) - pow(ElectronMass,2));
- p1.SetXYZM(k1.X(),k1.Y(),k1.Z(),ElectronMass); //v=(x,y,z,e=Sqrt(x*x+y*y+z*z+m*m))
- p2.SetXYZM(k2.X(),k2.Y(),k2.Z(),ElectronMass);
- BeamP4.SetXYZT(0,0,E0.X(),E0.X());
- t_t = -(BeamP4 - p1 - p2).Mag2();
- Hist_t->Fill(t_t);
+	x_t = x.X();
+ 	theta1_t = theta1.X(); theta2_t = theta2.X();
+ 	phi1_t = phi1.X(); phi2_t = phi2.X();
+ 	E0_t = E0.X(); Attempts_t = i;
+ 	ev_t = n; 
+ 	k1 = ThreeVec(theta1.X(), phi1.X()) * sqrt( pow(x.X(),2) * pow(E0.X(),2) - pow(ElectronMass,2));
+ 	k2 = ThreeVec(theta2.X(), phi2.X()) * sqrt( pow(1 - x.X(),2) * pow(E0.X(),2) - pow(ElectronMass,2));
+ 	p1.SetXYZM(k1.X(),k1.Y(),k1.Z(),ElectronMass); //v=(x,y,z,e=Sqrt(x*x+y*y+z*z+m*m))
+ 	p2.SetXYZM(k2.X(),k2.Y(),k2.Z(),ElectronMass);
+ 	BeamP4.SetXYZT(0,0,E0.X(),E0.X());
+ 	t_t = -(BeamP4 - p1 - p2).Mag2();
+ 	Hist_t->Fill(t_t);
 
 //CrossSectionRatio_t = dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0) / 
 //		  dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0); 
 
 //HyperGeometricCrossSection_t = dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0);
 
- t1.Fill();
+ 	t1.Fill();
 
 //cout << "\n"; 
 //cout << "\n"; cout << "\n"; cout << "\n"; cout << "\n"; cout << "\n"; cout << "\n"; cout << "\n"; 
@@ -292,38 +331,38 @@ i = 1;
 //cout << dSigmaHypergeometric(x.X(), theta1.X(), theta2.X(), phi1.X(), phi2.X(), E0) / 
 //		  dSigmaHypergeometric(x.Y(), theta1.Y(), theta2.Y(), phi1.Y(), phi2.Y(), E0) << "\n";
 
-E0.SetX(RandomReal(min_BeamEnergy, max_BeamEnergy));
+	E0.SetX(RandomReal(min_BeamEnergy, max_BeamEnergy));
 
 
-x.SetY(x.X()); //move to the previous value. 
-x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) )); //make a new value for x
+	x.SetY(x.X()); //move to the previous value. 
+	x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) )); //make a new value for x
 		while(x.X() < (ElectronMass/E0.X()) || x.X() > (1 - (ElectronMass/E0.X()) ))
 		{
  			x.SetX(RandomReal(ElectronMass/min_BeamEnergy, 1 - (ElectronMass/max_BeamEnergy) ));
 		}
 
-theta1.SetY(theta1.X());
-theta1.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
+	theta1.SetY(theta1.X());
+	theta1.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
 
-theta2.SetY(theta2.X());
-theta2.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
+	theta2.SetY(theta2.X());
+	theta2.SetX(1/(RandomReal( 1/max_theta, 1/min_theta) ));
 
-phi1.SetY(phi1.X());
-phi1.SetX(RandomReal(0, 2*PI));
-
-
-phi2.SetY(phi2.X());
-phi2.SetX(RandomReal(0, 2*PI));
+	phi1.SetY(phi1.X());
+	phi1.SetX(RandomReal(0, 2*PI));
 
 
-}
+	phi2.SetY(phi2.X());
+	phi2.SetX(RandomReal(0, 2*PI));
 
-  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+
+
+	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
     std::cout<<"printf: "<< duration <<'\n';
 
-t1.Write();
-
+	t1.Write();
+}
 
 
 return 0;

@@ -1,0 +1,1 @@
+double dSigmaBorn(double x, double theta1, double theta2, double phi1, double phi2, double E0);
