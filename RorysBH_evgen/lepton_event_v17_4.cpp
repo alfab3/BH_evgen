@@ -792,7 +792,7 @@ void ZBQLINI(int SEED)
     {
         if (INIT == 1) 
         {
-            printf(*, 1);  // format(//5X, "****WARNING**** You have called routine ZBQLINI ", "more than", /5X, "once. I""m ignoring any subsequent calls.", //);
+          // format(//5X, "****WARNING**** You have called routine ZBQLINI ", "more than", /5X, "once. I""m ignoring any subsequent calls.", //);
             INIT = 2;
         }
         return;
@@ -815,6 +815,7 @@ void ZBQLINI(int SEED)
     //*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     if (SEED == 0) 
     {
+        /*
         //*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         //*>>>>>>>	COMMENT OUT FROM HERE IF YOU DON'T HAVE  >>>>>>>
         //*>>>>>>>	'CALL SYSTEM' CAPABILITY ...		 >>>>>>>
@@ -844,6 +845,7 @@ g12:
         DHH = int((double(HH)/2.4)*zbql0001.B);
         DDD = int((double(DD)/3.65)*zbql0001.B);
         TMPVAR1 = fmod(DSS + DMM + DHH + DDD, zbql0001.B);
+        /**/
         //*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         //*<<<<<<<<	... TO HERE (END OF COMMENTING OUT FOR 	  <<<<<<<
         //*<<<<<<<<	USERS WITHOUT 'CALL SYSTEM' CAPABILITY	  <<<<<<<
@@ -959,9 +961,9 @@ double ZBQLUAB(double A, double B)
     } else
     {
         outputZBQLUAB = A;
-        printf(*, 1);  // format(/5X, "****WARNING**** (function ZBQLUAB) Upper and ", "lower limits on uniform", /5X, "distribution are identical", /);
+        //printf(*, 1);  // format(/5X, "****WARNING**** (function ZBQLUAB) Upper and ", "lower limits on uniform", /5X, "distribution are identical", /);
     }
-    
+    return outputZBQLUAB;
 };
 
 
@@ -979,7 +981,7 @@ double ZBQLexp(double MU)
     
     if (MU < 0.0) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLEXP", /)
+      // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLEXP", /)
         return;
     }
     
@@ -1040,11 +1042,11 @@ double ZBQLBIN(int N, double P)
     
     if (!((P >= 0.0)) && ((P <= 1.0))) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBIN", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBIN", /);
         return;
     } else
     {if (N <= 0){}
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBIN", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBIN", /);
         return;
     }
     //*
@@ -1137,7 +1139,7 @@ int ZBQLGEO(double P)
     
     if (!((P >= 0.0)) && ((P <= 1.0))) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLGEO", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLGEO", /);
         return;
     }
     
@@ -1191,7 +1193,7 @@ double ZBQLPOI(double MU)
     
     if (MU < 0.0) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLPOI", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLPOI", /);
         return;
     }
     //*
@@ -1280,7 +1282,7 @@ double ZBQLGAM(double G, double H)
     
     if(((G <= 0.0)) || ((H < 0.0))) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLGAM", /5X, "(both parameters must be positive)", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLGAM", /5X, "(both parameters must be positive)", /);
         return;
     }
     
@@ -1299,8 +1301,8 @@ g889:
             goto g892;
         }
 g891:
-        outputZBQLGAM = -log((G + exp(1.0)) * (1.0 - U)/(g*exp(1.0)));
-        if (V > pow(outputZBQLGAM,(g - 1.0))) goto g889;
+        outputZBQLGAM = -log((G + exp(1.0)) * (1.0 - U)/(G * exp(1.0)));
+        if (V > pow(outputZBQLGAM,(G - 1.0))) goto g889;
 g892:
         outputZBQLGAM = outputZBQLGAM/H;
         return;
@@ -1376,7 +1378,7 @@ double ZBQLBET1(double NU1, double NU2)
     
     if(((NU1 <= 0.0)) || ((NU2 <= 0.0))) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBET1", /5X, "(both degrees of freedom must be positive)", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBET1", /5X, "(both degrees of freedom must be positive)", /);
         return;
     }
     //*      
@@ -1399,7 +1401,7 @@ g10:
         X2 = ZBQLGAM(NU2, 1.0);
         outputZBQLBET1 = X1/(X1 + X2);
     }
-    return;
+    return outputZBQLBET1;
 }
 
 
@@ -1418,13 +1420,13 @@ double ZBQLWEI(double A, double B)
     
     if(((A <= 0.0)) || ((B <= 0.0))) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLWEI", /5X, "(both parameters must be positive)", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLWEI", /5X, "(both parameters must be positive)", /);
         return;
     }
     
     U = ZBQLU01(0.0);
     outputZBQLWEI = B*(pow((-log(U)),(1.0/A)));
-    
+    return outputZBQLWEI;
     
 };
 
@@ -1446,13 +1448,14 @@ int ZBQLNB(double R, double P)
     
     if(((R <= 0.0)) || ((P <= 0.0)) || ((P >= 1.0))) 
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLNB");
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLNB");
         return;
     }
     
     Y = ZBQLGAM(R, 1.0);
     Y = Y*P/(1.0 - P);
     outputZBQLNB = ZBQLPOI(Y);
+    return outputZBQLNB;
     
     
 };
@@ -1475,13 +1478,13 @@ double ZBQLPAR(double A, double B)
     
     if(((A <= 0.0)) || ((B <= 0.0)))
     {
-        printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLPAR", /5X, "(both parameters must be positive)", /);
+        //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLPAR", /5X, "(both parameters must be positive)", /);
         return;
     }
     
     U = ZBQLU01(0.0);
     outputZBQLPAR = B*(pow(U, (-1.0/A)) - 1.0);
-    
+    return outputZBQLPAR;
     
 };
 
@@ -1548,4 +1551,5 @@ double ZBQLLG(double X)
         outputZBQLLG = log(TMP/sin(TMP)) - outputZBQLLG;
     }
     
+    return outputZBQLLG;
 };
