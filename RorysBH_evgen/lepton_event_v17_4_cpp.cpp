@@ -2,7 +2,7 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
-#include <RandGen.h>
+#include "RandomReal.h"
 
 struct density_rho0{
   double rho0, c_den[100], a_den[100]; //the overall normalization factor for nuclear charge densities
@@ -123,20 +123,19 @@ int main(){
 //Set target mass in GeV
     mtgt = Atgt[ztgt]*0.931494;
     if (ztgt == 1) mtgt = 0.93828;
-//
-    do{
+    i = 0;
+    while(i < 200){
         data_array[i] = 0;
         error_array[i] = 0;
         i++;
-    }while(i < 200);
+    }
 
 //Initialize Brem. distribution: select 1/Egamma or coherent Brems. file
     cobrems = true;//set true for scanfing coherent Brems. file, false for using a 1/Egamma distribution;
-    if(cobrems == true) 
-{ // scanf coherent Brem. file
+    if(cobrems == true){ // scanf coherent Brem. file
     brem_init = true;
     temp = Brem(brem_init, cobrems, E0, Egamma);//scanf coherent brems file, then set brem_init = false;
-}
+    }
 
 //Start logical assignments
 
@@ -155,8 +154,7 @@ int main(){
     nuc_FF = true;
     muon = false;//this is how you change the particle type
 //electron = .not.muon;
-    if (muon == true) 
-    {
+    if (muon == true){
         m_part = m_muon;
         pion_hypothesis = false; //set true if you want calculated invariant masses with pion assumption;
     }else{
@@ -186,15 +184,15 @@ int main(){
 //***********************************
 //	Evaluate the cross section at one kinematic point at coherent peak
     x = 0.5;
-    theta1 = theta_min*(pi/180);
-    theta2 = theta_min*(pi/180);
-    phi1 = 90*(pi/180);
-    phi2 = 270*(pi/180);
+    theta1 = theta_min * (pi/180);
+    theta2 = theta_min * (pi/180);
+    phi1 = 90 * (pi/180);
+    phi2 = 270 * (pi/180);
     cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2);
     std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
 //*************************************
-    theta_min = theta_min*pi/180;//switch to radians;
-    theta_max = theta_max*pi/180;
+    theta_min = theta_min * pi/180;//switch to radians;
+    theta_max = theta_max * pi/180;
     cos_max = cos(theta_min);
     cos_min = cos(theta_max);
 // Limits on xs
@@ -210,41 +208,41 @@ int main(){
 //
     j = 0;
     i = 0;
-    do{//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
+    while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
 //cross section*Brem converges
-    cross_max = 0;
-    do{//find maximum cross section in allowed phase space
-        Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
-        x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
-        phi1 = 90*pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
-        phi2 = 270*pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
-        xs2 = RandomReal(xs_min, xs_max);
-        if (phase_space == 0) {// dcos theta/dx = 1
-            theta1 = theta_min;//make a guess for theta1
-            theta2 = acos(xs2);
-            jacobian = 1;
-        }else{
-            theta1 = theta_min;//make a guess for theta1
-            xs1 = pow(theta_min, (1/Rexp));
-            theta2 = pow(xs2, phase_space);
-            jacobian = (Rexp * pow(xs1, (phase_space - 1)) * sin(pow(xs1, phase_space))) * (Rexp * pow(xs2,(phase_space - 1)) * sin(pow(xs2,phase_space)));
+        cross_max = 0;
+        while(i < itest[j]){//find maximum cross section in allowed phase space
+            Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
+            x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
+            phi1 = 90 * pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
+            phi2 = 270 * pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
+            xs2 = RandomReal(xs_min, xs_max);
+            if (phase_space == 0) {// dcos theta/dx = 1
+                theta1 = theta_min;//make a guess for theta1
+                theta2 = acos(xs2);
+                jacobian = 1;
+            }else{
+                theta1 = theta_min;//make a guess for theta1
+                xs1 = pow(theta_min, (1/Rexp));
+                theta2 = pow(xs2, phase_space);
+                jacobian = (Rexp * pow(xs1, (phase_space - 1)) * sin(pow(xs1, phase_space))) * (Rexp * pow(xs2,(phase_space - 1)) * sin(pow(xs2,phase_space)));
+            }
+            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+            if(cross_section > cross_max){
+                cross_max = cross_section;
+                Egamma_max = Egamma;
+                xmax = x;
+                theta1_max = theta1 * 180/pi;
+                theta2_max = theta2 * 180/pi;
+                phi1_max = phi1 * 180/pi;
+                phi2_max = phi2 * 180/pi;
+                i++;
+            }
         }
-        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
-        if(cross_section > cross_max){
-            cross_max = cross_section;
-            Egamma_max = Egamma;
-            xmax = x;
-            theta1_max = theta1*180/pi;
-            theta2_max = theta2*180/pi;
-            phi1_max = phi1*180/pi;
-            phi2_max = phi2*180/pi;
-            i++;
-        }
-    }while(i < itest[j]);
     std::cout << "test events " << itest[j] <<  " maximum xsctn*Brem " <<  cross_max << "\n";
     std::cout << "Egamma max " << Egamma_max << " x max " << xmax << " theta1 max " << theta1_max << " theta2 max " << theta2_max << " phi1 max " << phi1_max << " phi2 max " <<  phi2_max << "\n";
     j++;
-    }while(j < 4);
+    }
 //
 //**********************************************************************************************************
 // Loop over 4 samplings of the phase space at coherent peak, each a factor of x10 larger, to see if the integrated cross section converges
@@ -254,32 +252,32 @@ int main(){
     x_max = (E_coherent - m_part)/E_coherent;
     x_min = m_part/E_coherent;
 //
-    do{//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
+    while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
 //cross section at the coherent peak converges
-    cross_sum = 0;
-    do{
-        x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
-        phi1 = 2*pi * RandomReal(zlo, zhi);
-        phi2 = 2*pi * RandomReal(zlo, zhi);
-        xs1 = RandomReal(xs_min, xs_max);
-        xs2 = RandomReal(xs_min, xs_max);
-        if (phase_space == 0){// dcos theta/dx = 1
-            theta1 = acos(xs1);
-            theta2 = acos(xs2);
-            jacobian = 1;
-        }else{
-            theta1 = pow(xs1,phase_space);
-            theta2 = pow(xs2,phase_space);
-            jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
+        cross_sum = 0;
+        while(0 < itest[j]){
+            x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
+            phi1 = 2*pi * RandomReal(zlo, zhi);
+            phi2 = 2*pi * RandomReal(zlo, zhi);
+            xs1 = RandomReal(xs_min, xs_max);
+            xs2 = RandomReal(xs_min, xs_max);
+            if (phase_space == 0){// dcos theta/dx = 1
+                theta1 = acos(xs1);
+                theta2 = acos(xs2);
+                jacobian = 1;
+            }else{
+                theta1 = pow(xs1,phase_space);
+                theta2 = pow(xs2,phase_space);
+                jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
+            }
+            cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian;
+            cross_sum = cross_sum + cross_section;
+            i++;
         }
-        cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian;
-        cross_sum = cross_sum + cross_section;
-        i++;
-    }while(0 < itest[j]);
-    total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*pi), 2) * (x_max - x_min);
-    std::cout << "test events " << itest[j] << " Egamma " <<  E_coherent << " total cross section nb " <<  total_xscn << "\n";
-    j++;
-    }while(j < 4);
+        total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*pi), 2) * (x_max - x_min);
+        std::cout << "test events " << itest[j] << " Egamma " <<  E_coherent << " total cross section nb " <<  total_xscn << "\n";
+        j++;
+    }
 
 
 //*************************************************************************
