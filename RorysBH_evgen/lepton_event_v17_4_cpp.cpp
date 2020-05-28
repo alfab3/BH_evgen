@@ -239,8 +239,8 @@ int main(){
                 i++;
             }
         }
-    std::cout << "test events " << itest[j] <<  " maximum xsctn*Brem " <<  cross_max << "\n";
-    std::cout << "Egamma max " << Egamma_max << " x max " << xmax << " theta1 max " << theta1_max << " theta2 max " << theta2_max << " phi1 max " << phi1_max << " phi2 max " <<  phi2_max << "\n";
+        std::cout << "test events " << itest[j] <<  " maximum xsctn*Brem " <<  cross_max << "\n";
+        std::cout << "Egamma max " << Egamma_max << " x max " << xmax << " theta1 max " << theta1_max << " theta2 max " << theta2_max << " phi1 max " << phi1_max << " phi2 max " <<  phi2_max << "\n";
     j++;
     }
 //
@@ -290,16 +290,16 @@ int main(){
     //
     nfail = 0;
     bad_max = 0;
+    i = 0;
     //
-    do{
+    while(i < nevent){
     g100:
-
         Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
         x = RandomReal(x_min, x_max);//energy fraction
   //	Test x to make sure it's within the allowed range for the photon energy Egamma
         if((x >= ((Egamma - m_part)/Egamma)) || (x <= (m_part/Egamma))) goto g100; // x is out of range, try again
-        phi1 = 2 * pi*RandomReal(zlo, zhi);
-        phi2 = 2 * pi*RandomReal(zlo, zhi);
+        phi1 = 2 * pi * RandomReal(zlo, zhi);
+        phi2 = 2 * pi * RandomReal(zlo, zhi);
         xs1 = RandomReal(xs_min, xs_max);
         xs2 = RandomReal(xs_min, xs_max);
         if(phase_space == 0){// dcos theta/dx = 1
@@ -348,7 +348,8 @@ int main(){
 // format(2x, f6.3, 1x, 9(f10.6, 1x))
 //
         //if (i % 100 == 0) std::cout << ' event # ' << i;
-    }while(i < nevent);
+        i++;
+    }
 
 
 //
@@ -358,7 +359,7 @@ int main(){
     std::cout <<  "Failures per event = " << failure << " Events with cross section exceeding max xsctn = " << bad_max << "\n";
 //
     int i = 0;
-    do{//printf out the arrays
+    while(i < 200){//printf out the arrays
         if(hist_w){
             std::ofstream histFile;
             histFile.open("lepton_v17_4_hist.txt");
@@ -404,14 +405,15 @@ int main(){
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
             histFile.close();
         }
-    }while(i < 200);
+        i++;
+    }
 
 
 //
 
 //
 //exit(0);
-};
+}
 
 
 //
@@ -501,10 +503,10 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     c2 = pow(p2, 2) + pow(m_part, 2);
     JS = 1/c1 - 1/c2;//units of 1/GeV^2//scalar current, units of GeV^ - 2;
     i = 0;
-    do{
+    while(i < 2){
       JT[i] = k1[i]/c1 + k2[i]/c2;//vector current, units of GeV^ - 1;
       i++;
-    }while(i < 2);
+    }
 
 
     phi_JT = acos(JT[1]/sqrt(pow(JT[1],2) + pow(JT[2], 2)));//phi angle of JT wrt to x axis, radians
@@ -542,10 +544,10 @@ double FF2(double q2, int ztgt, bool nuc_FF)
     FF_nuc = FF(q2, ztgt);
     FF_TFM = 1;
     i = 0;
-    do{
+    while(i < 3){
       FF_TFM = FF_TFM - alpha[i]*q2/(q2 + pow((b[i]*c),2));
       i++;
-    }while(i < 3);
+    }
     if(nuc_FF){
 	    outputFF2 = pow((FF_nuc - FF_TFM),2);
     }else{
@@ -603,10 +605,11 @@ void density_init(int ztgt)
     if((ztgt == 82) || (ztgt == 1)) return;
     //c	These equations have to do with Fermi distribution, reference? 
     w = 4 * pi * c_den[ztgt]/3 * (pow((pi * a_den[ztgt]), 2) + pow(c_den[ztgt], 2));
-    do{
-      w = w + 8 * pi * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * exp(-float(i)*c_den[ztgt]/a_den[ztgt])/pow(float(i), 3);
-    i++;
-    }while(i < 10);
+    i = 0;
+    while(i < 10){
+        w = w + 8 * pi * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * exp(-float(i)*c_den[ztgt]/a_den[ztgt])/pow(float(i), 3);
+        i++;
+    }
     density_rho0.rho0 = 1/w;
     return;
 };
@@ -664,4 +667,4 @@ double FF(double Q2, int ztgt)
       }while(i < 10);
     }
 return returnFF;
-};
+}
