@@ -23,23 +23,23 @@ struct Brem_spect brem_spect;
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma);
 double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT, double k1[3], double k2[3]);//units of nb/sr^2
 double FF2(double q2, int ztgt, bool nuc_FF);
-//void analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis);
+double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis);
 void density_init(int ztgt);
 double FF(double Q2, int ztgt);
 void ZBQLINI(int SEED);
-//void ZBQLU01(double DUMMY);
-//double ZBQLUAB(double A, double B);
-//void ZBQLexp(double MU);
-//void ZBQLNOR(double MU, double SIGMA);
-//void ZBQLBIN(int N, double P);
-//void ZBQLGEO(double P);
-//void ZBQLPOI(double MU);
-//void ZBQLGAM(double G, double H);
-//void ZBQLBET1(double NU1, double NU2);
-//void ZBQLWEI(double A, double B);
-//void ZBQLNB(double R, double P);
-//void ZBQLPAR(double A, double B);
-//void ZBQLLG(double X);
+double ZBQLU01(double DUMMY);
+double ZBQLUAB(double A, double B);
+double ZBQLexp(double MU);
+double ZBQLNOR(double MU, double SIGMA);
+double ZBQLBIN(int N, double P);
+int ZBQLGEO(double P);
+double ZBQLPOI(double MU);
+double ZBQLGAM(double G, double H);
+double ZBQLBET1(double NU1, double NU2);
+double ZBQLWEI(double A, double B);
+int ZBQLNB(double R, double P);
+double ZBQLPAR(double A, double B);
+double ZBQLLG(double X);
 
 
 //
@@ -104,7 +104,7 @@ int main(){
 //COMMON/density_rho0/rho0, c_den, a_den//the overall normalization factor for nuclear charge densities
 //
     double zlo, zhi;
-    double zlo = 0.0, zhi = 1.0;
+    zlo = 0.0, zhi = 1.0;
 //
 //      BLOCK DATA ZBQLBD01
 //
@@ -159,8 +159,8 @@ int main(){
     ZBQLIX[41] = 3.20429173;
     ZBQLIX[42] = 2.63576576;
 
-    double B = 4.294967291;
-    double C = 0.0;
+    B = 4.294967291;
+    C = 0.0;
 //
     iseed = 0;//set equal to 0 for the // program to do a call to the system clock to initialize random number generator;
 //			!for random number initialization
@@ -400,10 +400,10 @@ int main(){
             outputFile.open("lepton_v17_4_event.txt");
             outputFile << Egamma << " " << k1[0] << " " << k1[1] << " " << k1[2] << " " << k2[0] << " " << k2[1] << " " << k2[2] << " " << ktgt[0] << " " << ktgt[1]<< " " << ktgt[2] << " " << "\n";
         }
-g200:
+	//g200:
 // format(2x, f6.3, 1x, 9(f10.6, 1x))
 //
-        if (i % 100 == 0) std::cout << ' event # ' << i;
+        //if (i % 100 == 0) std::cout << ' event # ' << i;
     }while(i < nevent);
 
 
@@ -478,7 +478,7 @@ double Brem(bool brem_init, bool cobrems, double E0, double Egamma){
     double Eg[500], Br[500];
     int i, imax, ipoint;
     double bremOut;
-    bool brem_init, cobrems;
+
     FILE *CBD;
     //COMMON/Brem_spect/Eg, Br
     //	
@@ -489,7 +489,7 @@ double Brem(bool brem_init, bool cobrems, double E0, double Egamma){
         i = 1;
 g10:
         
-      fscanf(CBD,"%d %d", brem_spect.Eg[i], brem_spect.Br[i]);
+      fscanf(CBD,"%lf %lf", &brem_spect.Eg[i], &brem_spect.Br[i]);
         //		print *, Eg(i), Br(i)
       i = i + 1;
       goto g10;
@@ -498,21 +498,22 @@ g20:
       imax = i - 1;
       fclose(CBD);
       brem_init = false;//done with initialization;
-      return;
+      //return bremOut;
     }
     //
     if (!cobrems) 
     {
         bremOut = E0/Egamma;
-        return bremOut;
+        //return bremOut;
     }
     //
     if (cobrems) 
     { //return coherent brems distribution
         ipoint = int((Egamma + .02)/.04);
         bremOut = brem_spect.Br[ipoint];
-        return bremOut;
+        //return bremOut;
     }
+    return bremOut;
 }
 
 
@@ -525,14 +526,14 @@ g20:
 // --------------------------------------------
 double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT, double k1[3], double k2[3])//units of nb/sr^2;
 {
-    //implicit none
-    double Z, k1[3], k2[3], W_unpol, W_pol, q2_T;
-    double  alpha, hbarc;
+//implicit none
+  double Z, W_unpol, W_pol, q2_T;
+    double alpha, hbarc;
     double xsctnOut;
-    double pi, E1, E2, k1_mag, k2_mag, p1, p2, q2, c1, c2, JS, JT[2], FF2, FF_nuc, FF_TFM, phi_JT;
+    double pi, E1, E2, k1_mag, k2_mag, p1, p2, q2, c1, c2, JS, JT[2], FF2, FF_nuc, FF_TFM;
     int i;
     //
-    double alpha = 7.297352e-3, hbarc = 0.197;
+    alpha = 7.297352e-3, hbarc = 0.197;
     //
     pi = acos(-1);
     //
@@ -573,7 +574,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(pi,2) * pow(q2_T, 2) * (W_unpol + pol * cos(2 * phi_JT) * W_pol));
 //this contains the cos(2phi_JT) term*hbarc**2/100.*1.e9*FF2(q2_T, ztgt, nuc_FF) //units of nb/sr^2 The denominator uses the transverse 3 - momentum transfer^2
 //
-    return;
+    return xsctnOut;
 };
 
 
@@ -585,8 +586,7 @@ double FF2(double q2, int ztgt, bool nuc_FF)
 {
     double hbarc, z, FF_nuc, FF_TFM, alpha[3], b[3], b0, m_e, c, outputFF2;
     int i;
-    //bool nuc_FF;
-    double m_e = 0.511e-3, hbarc = 0.197;
+    m_e = 0.511e-3, hbarc = 0.197;
     alpha[0] = 0.1; 
     alpha[1] = 0.55; 
     alpha[2] = 0.35;
@@ -597,7 +597,7 @@ double FF2(double q2, int ztgt, bool nuc_FF)
     c = m_e*pow(z,0.333);
     FF_nuc = FF(q2, ztgt);
     FF_TFM = 1;
-    int i = 0;
+    i = 0;
     do{
       FF_TFM = FF_TFM - alpha[i]*q2/(q2 + pow((b[i]*c),2));
       i++;
@@ -616,7 +616,7 @@ double FF2(double q2, int ztgt, bool nuc_FF)
 double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis)
 {
     // implicit none
-    double E1, E2, ks[3], w_mumu, t, m_x;
+  double E1, E2, ks[3], m_x, analysisOut;
     double m_pi = 0.139570;
     pi = acos(-1);
     E1 = sqrt(pow(k1[0], 2) + pow(k1[1], 2) + pow(k1[2], 2) + pow(m_part, 2));//lepton energies
@@ -636,7 +636,7 @@ double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[
     E1 = sqrt(pow(k1[0], 2) + pow(k1[1],2) + pow(k1[2], 2) + pow(m_x, 2));//need to put in the mass hypothesis
     E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_x, 2));
     w_mumu = sqrt(pow(E1 + E2, 2) - pow(ks[0], 2) - pow(ks[1], 2) - pow(ks[2],2));
-    return;
+    return analysisOut;
 }
 
 
@@ -675,12 +675,12 @@ void density_init(int ztgt)
 double FF(double Q2, int ztgt)
 {
     // implicit none
-    double Q2, q02, hbarc, Q, gamma, r[12], A[12], rho0, c_den[100], a_den[100], pi, norm, proton_rms;
-    int i = 0, ztgt;
+    double q02, hbarc, Q, gamma, r[12], A[12], rho0, c_den[100], a_den[100], pi, norm, proton_rms;
+    int i = 0;
     double returnFF;
     //c
-    double q02 = 0.71, proton_rms = 0.879;//proton dipole form factor parameter GeV^2, proton rms radius fm
-    double hbarc = 0.197;
+    q02 = 0.71, proton_rms = 0.879;//proton dipole form factor parameter GeV^2, proton rms radius fm
+    hbarc = 0.197;
     //COMMON/density_rho0/rho0, c_den, a_den
     //c
     r[0] = 0.1, A[0] = 0.003845;
@@ -695,7 +695,7 @@ double FF(double Q2, int ztgt)
     r[9] = 6.6, A[9] = 0.033637;
     r[10] = 7.6, A[10] = 0.018729;
     r[11] = 8.7, A[11] = 0.000020;
-    double gamma = 1.388;
+    gamma = 1.388;
     //
     //  Select the FF
     //
@@ -704,7 +704,7 @@ double FF(double Q2, int ztgt)
     //
     if (ztgt == 1) 
     {//proton
-        returnFF = 1./(pow((1. + Q2/q02),2)) + 2 * Q2/q02 - 1/6 * Q2 * pow(proton_rms, 2)/pow(hbarc, 2);
+        returnFF = 1/(pow((1. + Q2/q02),2)) + 2 * Q2/q02 - 1/6 * Q2 * pow(proton_rms, 2)/pow(hbarc, 2);
     }else if(ztgt == 82){//lead
         returnFF = 0;
 	    do{
@@ -895,7 +895,7 @@ double ZBQLU01(double DUMMY)
     //COMMON/ZBQL0001/ZBQLIX, B, C
     //SAVE/ZBQL0001/;
     //SAVE CURPOS, ID22, ID43;
-    int CURPOS = 0, ID22 = 21, ID43 = 42;
+    CURPOS = 0, ID22 = 21, ID43 = 42;
     
     B2 = zbql0001.B;
     BINV = 1.0/zbql0001.B;
@@ -950,7 +950,7 @@ double ZBQLUAB(double A, double B)
     //*
     //*       Returns a random number uniformly distributed on (A,B)
     //*
-    double A, B, outputZBQLUAB;
+    double outputZBQLUAB;
     
     //*
     //*       Even if A > B, this will work as B-A will then be -ve
@@ -982,10 +982,11 @@ double ZBQLexp(double MU)
     if (MU < 0.0) 
     {
       // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLEXP", /)
-        return;
+        return outputZBQLEXP;
     }
     
     outputZBQLEXP = log(ZBQLU01(0.0)) * MU;
+    return outputZBQLEXP;
     
     
     
@@ -1005,7 +1006,7 @@ double ZBQLNOR(double MU, double SIGMA)
     double SPARE;
     int STATUS;
     //SAVE STATUS, SPARE, PI;
-    int STATUS = - 1;
+    STATUS = -1;
     
     if (STATUS == -1) PI = 4.0 * atan(1.0);
     
@@ -1023,7 +1024,8 @@ double ZBQLNOR(double MU, double SIGMA)
     }
     
     outputZBQLNOR = MU + (SIGMA * outputZBQLNOR);
-    
+
+    return outputZBQLNOR;
 };
 
 
@@ -1035,7 +1037,7 @@ double ZBQLBIN(int N, double P)
     //*       Returns a random number binomially distributed (N,P)
     //*
     double outputZBQLBIN, PP, PPP, G, Y, TINY;
-    int N, IZ, NN;
+    int IZ, NN;
     
     TINY = 1.0;
     outputZBQLBIN = 0;
@@ -1043,11 +1045,11 @@ double ZBQLBIN(int N, double P)
     if (!((P >= 0.0)) && ((P <= 1.0))) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBIN", /);
-        return;
+        return outputZBQLBIN;
     } else
     {if (N <= 0){}
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBIN", /);
-        return;
+        return outputZBQLBIN;
     }
     //*
     //*	First step: if NP > 10, say, things will be expensive, and 
@@ -1117,7 +1119,8 @@ g30:
     
     if (PP > 0.5) IZ = NN - IZ;
     outputZBQLBIN = outputZBQLBIN + IZ;
-    
+
+    return outputZBQLBIN;
     
 };
 
@@ -1140,7 +1143,7 @@ int ZBQLGEO(double P)
     if (!((P >= 0.0)) && ((P <= 1.0))) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLGEO", /);
-        return;
+        return outputZBQLGEO;
     }
     
     if (P > 0.9) 
@@ -1164,7 +1167,7 @@ g10:
             outputZBQLGEO = 1 + int(-log(U)/P);
         }
     }
-    
+    return outputZBQLGEO;
     
 };
 
@@ -1181,7 +1184,7 @@ double ZBQLPOI(double MU)
     double MU1, TMP1, TMP2, T;
     int K, INIT;
     //SAVE INIT, PI;
-    int INIT = 0;
+    INIT = 0;
     
     if (INIT == 0) 
     {
@@ -1194,7 +1197,7 @@ double ZBQLPOI(double MU)
     if (MU < 0.0) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLPOI", /);
-        return;
+        return outputZBQLPOI;
     }
     //*
     //*      For small MU, generate exponentials till their sum exceeds 1
@@ -1220,7 +1223,6 @@ g19:
             if (Y > 1.0) 
             {
                 outputZBQLPOI = outputZBQLPOI + ZBQLBIN(K - 1, (1.0/Y));
-                return;
             }
             outputZBQLPOI = outputZBQLPOI + K;
             MU1 = MU1*(1.0 - Y);
@@ -1260,7 +1262,7 @@ g30:
             if (log(ZBQLU01(0.0)) > T) goto g30;
         }
     }
-    
+    return outputZBQLPOI;
     
 };
 
@@ -1283,7 +1285,7 @@ double ZBQLGAM(double G, double H)
     if(((G <= 0.0)) || ((H < 0.0))) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLGAM", /5X, "(both parameters must be positive)", /);
-        return;
+        //return;
     }
     
     if (G < 1.0) 
@@ -1305,7 +1307,6 @@ g891:
         if (V > pow(outputZBQLGAM,(G - 1.0))) goto g889;
 g892:
         outputZBQLGAM = outputZBQLGAM/H;
-        return;
     }else if (G < 2.0){
         M = 0.0;
     }else if (G > 10.0){
@@ -1319,7 +1320,7 @@ g777:
         V = ZBQLU01(0.0);
         if (G > 2.50) 
         {
-            U = V + c5*(1.0 - 1.860 * U);
+            U = V + c5 * (1.0 - 1.860 * U);
         }
         if((U <= 0.0) || (U >= 1.0)) goto g777;
         w = c2* V/U;
@@ -1327,7 +1328,6 @@ g777:
         if (c3 * log(U) - log(w) + w >= 1.0) goto g777;
 g778:
         outputZBQLGAM = c1*w/H;
-        return;
     }else{
         M = -(G - 2.0);
     }
@@ -1360,7 +1360,7 @@ g50:
         goto g50;
     }
     
-    
+    return outputZBQLGAM;
 };
 
 
@@ -1379,7 +1379,6 @@ double ZBQLBET1(double NU1, double NU2)
     if(((NU1 <= 0.0)) || ((NU2 <= 0.0))) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLBET1", /5X, "(both degrees of freedom must be positive)", /);
-        return;
     }
     //*      
     //*       If parameters are too small, gamma subroutine tends to return zero
@@ -1421,7 +1420,6 @@ double ZBQLWEI(double A, double B)
     if(((A <= 0.0)) || ((B <= 0.0))) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLWEI", /5X, "(both parameters must be positive)", /);
-        return;
     }
     
     U = ZBQLU01(0.0);
@@ -1449,7 +1447,7 @@ int ZBQLNB(double R, double P)
     if(((R <= 0.0)) || ((P <= 0.0)) || ((P >= 1.0))) 
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLNB");
-        return;
+        //return;
     }
     
     Y = ZBQLGAM(R, 1.0);
@@ -1479,7 +1477,7 @@ double ZBQLPAR(double A, double B)
     if(((A <= 0.0)) || ((B <= 0.0)))
     {
         //printf(*, 1);  // format(/5X, "****ERROR**** Illegal parameter value in ", " ZBQLPAR", /5X, "(both parameters must be positive)", /);
-        return;
+        //return;
     }
     
     U = ZBQLU01(0.0);
@@ -1529,7 +1527,7 @@ double ZBQLLG(double X)
     if (abs(Z - 1.0) < 1.0) 
     {
         outputZBQLLG = 0.0;
-        return;
+        //return;
     }
     
     TMP = Z + 4.5;
