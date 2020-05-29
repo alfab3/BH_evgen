@@ -22,7 +22,7 @@ struct ZBQL0001 zbql0001;
 struct Brem_spect brem_spect;
 
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma);
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT, double k1[3], double k2[3]);//units of nb/sr^2
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT);//units of nb/sr^2
 double FF2(double q2, int ztgt, bool nuc_FF);
 double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis);
 void density_init(int ztgt);
@@ -66,11 +66,10 @@ bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_log_t,
 //	Standard GlueX configuration
 //	data ztgt,E0,E_coherent,pol,theta_min,theta_max /1,11.0,8.7,1.0,0.90,13.12/	//standard GlueX config., min and max angles in deg. to TOF
 int main(){
+  std::cout << "i started the function\n";
     ztgt = 1, E0 = 11.0, E_coherent = 8.7, pol = 1.0, theta_min = 0.090, theta_max = 13.12;///standard GlueX config., min and max angles in deg. to TOF;
-//
 //	Set tagging interval
     E_hi = 8.8, E_lo = 8.6;
-//
     itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 10;
     m_e = 0.000511, m_muon = 0.105658, m_pi = 0.139570, hbarc = 0.197;
 //	
@@ -87,7 +86,7 @@ int main(){
     Atgt[25] = 56.0, tgtlen[25] = 0.05, radlen[25] = 13.84, density_rho0.c_den[25] = 3.971,density_rho0.a_den[25] = 0.5935;//RL is g/cm^2;
     Atgt[49] = 116.0, tgtlen[49] = 0.05, radlen[49] = 8.82, density_rho0.c_den[49] = 5.416, density_rho0.a_den[49] = 0.552;
     Atgt[81] = 208.0, tgtlen[81] = 0.05, radlen[81] = 6.37;
-//
+    std::cout << "i finished array assignments\n";
 //COMMON/density_rho0/rho0, c_den, a_den//the overall normalization factor for nuclear charge densities
 //
     double zlo, zhi;
@@ -105,7 +104,7 @@ int main(){
     ZBQLIX[28] = 9.441177, ZBQLIX[29] = 3.53244738, ZBQLIX[30] = 2.44771580, ZBQLIX[31] = 1.59804337, ZBQLIX[32] = 2.07319904, ZBQLIX[33] = 3.37342907, ZBQLIX[34] = 3.75423178,
     ZBQLIX[35] = 7.0893571, ZBQLIX[36] = 4.26059785, ZBQLIX[37] = 3.95854390, ZBQLIX[38] = 2.0081010, ZBQLIX[39] = 5.9250059, ZBQLIX[40] = 1.62176640, ZBQLIX[41] = 3.20429173,
     ZBQLIX[42] = 2.63576576;
-
+    std::cout << "i finished ZBQLIX\n";
     B = 4.294967291;
     C = 0.0;
 //
@@ -124,22 +123,27 @@ int main(){
     mtgt = Atgt[ztgt]*0.931494;
     if (ztgt == 1) mtgt = 0.93828;
     i = 0;
+    std::cout << "i got to the first while loop\n";
     while(i < 200){
         data_array[i] = 0;
         error_array[i] = 0;
         i++;
     }
-
+    std::cout << "i finished the first while loop\n";
 //Initialize Brem. distribution: select 1/Egamma or coherent Brems. file
     cobrems = true;//set true for scanfing coherent Brems. file, false for using a 1/Egamma distribution;
     if(cobrems == true){ // scanf coherent Brem. file
-    brem_init = true;
-    temp = Brem(brem_init, cobrems, E0, Egamma);//scanf coherent brems file, then set brem_init = false;
+      brem_init = true;
+      std::cout << "i am calling Brem function\n";
+      temp = Brem(brem_init, cobrems, E0, Egamma);//scanf coherent brems file, then set brem_init = false;
     }
-
+    int pause;
+    std::cout << "this is the pause\n";
+    //std::cin >> pause;
 //Start logical assignments
 
-//Only one of the histogram logicals can be true, the rest must be false.   The event output can be turned on independent of histograming. 
+//Only one of the histogram logicals can be true, the rest must be false.   The event output can be turned on independent of histograming.
+    std::cout << "i got to the logicals\n";
     hist_w = false;
     hist_x = false;
     hist_t = false;
@@ -147,6 +151,7 @@ int main(){
     hist_log_t = false;
     hist_Egamma = false;
     output_event = true;
+    std::cout << "i finished the logicals\n";
 //Logical assignments
     phase_space = 4;//theta = x**phase_space, with int phase_space >1 . Note: phase_space = 4 seems to be fastest.;
 //Set phase_space=0 for standard dcos theta/dx =1
@@ -188,7 +193,8 @@ int main(){
     theta2 = theta_min * (pi/180);
     phi1 = 90 * (pi/180);
     phi2 = 270 * (pi/180);
-    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2);
+    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT);
+    std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << phi_JT << "\n";
     std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
 //*************************************
     theta_min = theta_min * pi/180;//switch to radians;
@@ -208,6 +214,7 @@ int main(){
 //
     j = 0;
     i = 0;
+    std::cout << "i made it to the first loop\n";
     while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
 //cross section*Brem converges
         cross_max = 0;
@@ -227,7 +234,7 @@ int main(){
                 theta2 = pow(xs2, phase_space);
                 jacobian = (Rexp * pow(xs1, (phase_space - 1)) * sin(pow(xs1, phase_space))) * (Rexp * pow(xs2,(phase_space - 1)) * sin(pow(xs2,phase_space)));
             }
-            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
             if(cross_section > cross_max){
                 cross_max = cross_section;
                 Egamma_max = Egamma;
@@ -270,7 +277,7 @@ int main(){
                 theta2 = pow(xs2,phase_space);
                 jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
             }
-            cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian;
+            cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT)*jacobian;
             cross_sum = cross_sum + cross_section;
             i++;
         }
@@ -312,7 +319,7 @@ int main(){
             jacobian = (Rexp * pow(xs1,(phase_space-1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1)) * sin(pow(xs2,phase_space)));
         }
 
-        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT, k1, k2)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
         if (cross_section > cross_max){
             bad_max = bad_max + 1;//an occurrence of cross section larger than cross_max, not supposed to happen
             std::cout <<  "bad max cross section= " <<  cross_section << "\n";
@@ -421,44 +428,37 @@ int main(){
 //
 // --------------------------------------------
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma){
-    double Eg[500], Br[500];
+    double Eg[300], Br[300];
     int i, imax, ipoint;
     double bremOut;
-
+    i = 0;
     FILE *CBD;
-    //COMMON/Brem_spect/Eg, Br
-    //	
-    //Brem = 0;
-    //
-    if (brem_init){//fopen and scanf coherent Brem file
-        CBD = fopen("CobremsDistribution.dat", "r");
-        i = 1;
-g10:
-        
-      fscanf(CBD,"%lf %lf", &brem_spect.Eg[i], &brem_spect.Br[i]);
-        //		print *, Eg(i), Br(i)
-      i = i + 1;
-      goto g10;
-g20:
-        
+    if (brem_init == true){//fopen and scanf coherent Brem file
+      CBD = fopen("CobremsDistribution.dat", "r");
+      //std::cout << "i have opened the .dat file\n";
+      while(i < 300){
+	    fscanf(CBD,"%lf %lf", &brem_spect.Eg[i], &brem_spect.Br[i]);
+	    //std::cout << i << "i have scanned .dat file\n";
+	    i = i + 1;
+      }
+      //std::cout << "i have finished the scan\n";  
       imax = i - 1;
       fclose(CBD);
+      //std::cout << "i have closed the file \n";
       brem_init = false;//done with initialization;
       //return bremOut;
     }
-    //
-    if (!cobrems) 
-    {
+    if (!cobrems){
         bremOut = E0/Egamma;
         //return bremOut;
     }
     //
-    if (cobrems) 
-    { //return coherent brems distribution
+    if (cobrems){ //return coherent brems distribution
         ipoint = int((Egamma + .02)/.04);
         bremOut = brem_spect.Br[ipoint];
         //return bremOut;
     }
+    //std::cout << "i am about to return\n";
     return bremOut;
 }
 
@@ -470,7 +470,7 @@ g20:
 // multiplied by 2.  You can see this by comparing Wp in Eqn. 22 with the vector current part of Eqn. 23
 //
 // --------------------------------------------
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT, double k1[3], double k2[3])//units of nb/sr^2;
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT)//units of nb/sr^2;
 {
 //implicit none
   double Z, W_unpol, W_pol, q2_T;
