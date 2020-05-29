@@ -22,7 +22,7 @@ struct ZBQL0001 zbql0001;
 struct Brem_spect brem_spect;
 
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma);
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT);//units of nb/sr^2
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF);//units of nb/sr^2
 double FF2(double q2, int ztgt, bool nuc_FF);
 double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis);
 void density_init(int ztgt);
@@ -193,8 +193,8 @@ int main(){
     theta2 = theta_min * (pi/180);
     phi1 = 90 * (pi/180);
     phi2 = 270 * (pi/180);
-    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT);
-    std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << phi_JT << "\n";
+    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF);
+    std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << "\n";
     std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
 //*************************************
     theta_min = theta_min * pi/180;//switch to radians;
@@ -234,7 +234,7 @@ int main(){
                 theta2 = pow(xs2, phase_space);
                 jacobian = (Rexp * pow(xs1, (phase_space - 1)) * sin(pow(xs1, phase_space))) * (Rexp * pow(xs2,(phase_space - 1)) * sin(pow(xs2,phase_space)));
             }
-            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
             if(cross_section > cross_max){
                 cross_max = cross_section;
                 Egamma_max = Egamma;
@@ -277,7 +277,7 @@ int main(){
                 theta2 = pow(xs2,phase_space);
                 jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
             }
-            cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT)*jacobian;
+            cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian;
             cross_sum = cross_sum + cross_section;
             i++;
         }
@@ -319,7 +319,7 @@ int main(){
             jacobian = (Rexp * pow(xs1,(phase_space-1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1)) * sin(pow(xs2,phase_space)));
         }
 
-        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, phi_JT)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
         if (cross_section > cross_max){
             bad_max = bad_max + 1;//an occurrence of cross section larger than cross_max, not supposed to happen
             std::cout <<  "bad max cross section= " <<  cross_section << "\n";
@@ -470,7 +470,7 @@ double Brem(bool brem_init, bool cobrems, double E0, double Egamma){
 // multiplied by 2.  You can see this by comparing Wp in Eqn. 22 with the vector current part of Eqn. 23
 //
 // --------------------------------------------
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double phi_JT)//units of nb/sr^2;
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF)//units of nb/sr^2;
 {
 //implicit none
   double Z, W_unpol, W_pol, q2_T;
