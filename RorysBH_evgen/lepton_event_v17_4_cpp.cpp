@@ -147,11 +147,10 @@ int main(){
     hist_w = false;
     hist_x = false;
     hist_t = false;
-    hist_phi_JT = false;
+    hist_phi_JT = true;
     hist_log_t = false;
     hist_Egamma = false;
     output_event = true;
-    std::cout << "i finished the logicals\n";
 //Logical assignments
     phase_space = 4;//theta = x**phase_space, with int phase_space >1 . Note: phase_space = 4 seems to be fastest.;
 //Set phase_space=0 for standard dcos theta/dx =1
@@ -215,9 +214,10 @@ int main(){
     j = 0;
     i = 0;
     std::cout << "i made it to the first loop\n";
-    while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
+    while(j < 3){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
 //cross section*Brem converges
         cross_max = 0;
+        i = 0;
         while(i < itest[j]){//find maximum cross section in allowed phase space
             Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
             x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
@@ -243,14 +243,18 @@ int main(){
                 theta2_max = theta2 * 180/pi;
                 phi1_max = phi1 * 180/pi;
                 phi2_max = phi2 * 180/pi;
-                i++;
+            
             }
+            i++;
+            std::cout << i << "\n";
         }
+    
         std::cout << "test events " << itest[j] <<  " maximum xsctn*Brem " <<  cross_max << "\n";
         std::cout << "Egamma max " << Egamma_max << " x max " << xmax << " theta1 max " << theta1_max << " theta2 max " << theta2_max << " phi1 max " << phi1_max << " phi2 max " <<  phi2_max << "\n";
-    j++;
+        j++;
+        std::cout << j << "\n";
     }
-//
+    std::cout << "i have completed the maxtest loop\n";
 //**********************************************************************************************************
 // Loop over 4 samplings of the phase space at coherent peak, each a factor of x10 larger, to see if the integrated cross section converges
 // Set limits on energy fraction
@@ -258,11 +262,11 @@ int main(){
     i = 0;
     x_max = (E_coherent - m_part)/E_coherent;
     x_min = m_part/E_coherent;
-//
-    while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
+    std::cout << "i am starting the next loop\n";
+    while(j < 3){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
 //cross section at the coherent peak converges
         cross_sum = 0;
-        while(0 < itest[j]){
+        while(i < itest[j]){
             x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
             phi1 = 2*pi * RandomReal(zlo, zhi);
             phi2 = 2*pi * RandomReal(zlo, zhi);
@@ -280,11 +284,13 @@ int main(){
             cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian;
             cross_sum = cross_sum + cross_section;
             i++;
+            std::cout << i << "\n";
         }
         total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*pi), 2) * (x_max - x_min);
         std::cout << "test events " << itest[j] << " Egamma " <<  E_coherent << " total cross section nb " <<  total_xscn << "\n";
         j++;
     }
+    std::cout << "i am about to start event generation\n";
 
 
 //*************************************************************************
@@ -356,64 +362,69 @@ int main(){
 //
         //if (i % 100 == 0) std::cout << ' event # ' << i;
         i++;
+        std::cout << i << "\n";
     }
 
 
-//
+    std::cout << "i have finished the event generation\n";
 //   Event generation ends
 //	
     float failure = float(nfail)/float(nevent);
     std::cout <<  "Failures per event = " << failure << " Events with cross section exceeding max xsctn = " << bad_max << "\n";
-//
+    std::ofstream histFile;
+    histFile.open("lepton_v17_4_hist.txt");
     int i = 0;
     while(i < 200){//printf out the arrays
+        std::cout << "histogramming... ";
         if(hist_w){
-            std::ofstream histFile;
-            histFile.open("lepton_v17_4_hist.txt");
+        
+            //std::ofstream histFile;
+            //histFile.open("lepton_v17_4_hist.txt");
             x_value = float(i) * delta_w + 0.200;
             error_array[i] = sqrt(data_array[i]);
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            histFile.close();
+            //histFile.close();
         }else if (hist_x){
-            std::ofstream histFile;
-            histFile.open("lepton_v17_4_hist.txt");
+            //std::ofstream histFile;
+            //histFile.open("lepton_v17_4_hist.txt");
             x_value = float(i) * delta_x;
             error_array[i] = sqrt(data_array[i]);
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            histFile.close();
+            //histFile.close();
         }else if(hist_t){
-            std::ofstream histFile;
-            histFile.open("lepton_v17_4_hist.txt");
+            //std::ofstream histFile;
+            //histFile.open("lepton_v17_4_hist.txt");
             x_value = float(i)*delta_t;
             error_array[i] = sqrt(data_array[i]);
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            histFile.close();
+            //histFile.close();
         }else if(hist_phi_JT){
-            std::ofstream histFile;
-            histFile.open("lepton_v17_4_hist.txt");
+            //std::ofstream histFile;
+            //histFile.open("lepton_v17_4_hist.txt");
             x_value = float(i)*delta_phi;
             if((x_value == 0.) || (x_value == 360.)) data_array[i] = 2.*data_array[i]; // this is a binning problem
             error_array[i] = sqrt(data_array[i]);
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            histFile.close();
+            //histFile.close();
         }else if(hist_log_t){
-            std::ofstream histFile;
-            histFile.open("lepton_v17_4_hist.txt");
+            //std::ofstream histFile;
+            //histFile.open("lepton_v17_4_hist.txt");
             x_value = pow(10, (float(i) * delta_log_t-6));
             error_array[i] = sqrt(data_array[i])/(pow(10,(float(i+1)*delta_log_t-6)) - pow(10,(float(i-1) * delta_log_t - 6))) * 2;
             data_array[i] = data_array[i]/(pow(10,(float(i+1) * delta_log_t-6)) - pow(10,(float(i-1) * delta_log_t - 6))) * 2;
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            histFile.close();
+            //histFile.close();
         }else if(hist_Egamma){
-            std::ofstream histFile;
-            histFile.open("lepton_v17_4_hist.txt");
-            x_value = float(i)*delta_Egamma;
+            //std::ofstream histFile;
+            //histFile.open("lepton_v17_4_hist.txt");
+            x_value = float(i) * delta_Egamma;
             error_array[i] = sqrt(data_array[i]);
             histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            histFile.close();
+            //histFile.close();
         }
         i++;
     }
+    histFile.close();
 
 
 //
@@ -476,7 +487,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
   double Z, W_unpol, W_pol, q2_T;
     double alpha, hbarc;
     double xsctnOut;
-    double pi, E1, E2, k1_mag, k2_mag, p1, p2, q2, c1, c2, JS, JT[2], FF2, FF_nuc, FF_TFM;
+    double pi, E1, E2, k1_mag, k2_mag, p1, p2, q2, c1, c2, JS, JT[2], FF_nuc, FF_TFM;
     int i;
     //
     alpha = 7.297352e-3, hbarc = 0.197;
@@ -488,36 +499,57 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     E2 = E0 * (1 - x);
     k1_mag = sqrt(pow(E1, 2) - pow(m_part, 2));
     k2_mag = sqrt(pow(E2, 2) - pow(m_part, 2));
+    //std::cout << "k1_mag " << k1_mag <<"\n";
+    //std::cout << "k2_mag " << k2_mag <<"\n";
     k1[0] = k1_mag * sin(theta1) * cos(phi1);
     k1[1] = k1_mag * sin(theta1) * sin(phi1);
     k1[2] = k1_mag * cos(theta1);
+    //std::cout << "k1[0] " << k1[0] <<"\n";
+    //std::cout << "k1[1] " << k1[1] <<"\n";
+    //std::cout << "k1[2] " << k1[2] <<"\n";
     k2[0] = k2_mag * sin(theta2) * cos(phi2);
     k2[1] = k2_mag * sin(theta2) * sin(phi2);
     k2[2] = k2_mag * cos(theta2);
+    //std::cout << "k2[0] " << k2[0] <<"\n";
+    //std::cout << "k2[1] " << k2[1] <<"\n";
+    //std::cout << "k2[2] " << k2[2] <<"\n";
     //
-    p1 = sqrt(pow(k1[1], 2) + pow(k1[2],2));//transverse momenta of muon #1, GeV
-    p2 = sqrt(pow(k2[1],2) + pow(k2[2],2));//transverse momenta of muon #2, GeV
-    q2_T = pow((k1[1] + k2[1]),2) + pow((k1[2] + k2[2]),2); // this is transverse momentum transfer squared
-    q2 = q2_T + pow((E0 - k1[3] - k2[3]), 2); // this is 3 - momentum transfer squared
+    p1 = sqrt(pow(k1[0], 2) + pow(k1[1],2));//transverse momenta of muon #1, GeV
+    //std::cout << "p1 " << p1 <<"\n";
+    p2 = sqrt(pow(k2[0], 2) + pow(k2[1],2));//transverse momenta of muon #2, GeV
+    //std::cout << "p2 " << p2 <<"\n";
+    q2_T = pow((k1[0] + k2[0]),2) + pow((k1[1] + k2[1]),2); // this is transverse momentum transfer squared
+    //std::cout << "q2_T " << q2_T <<"\n";
+    q2 = q2_T + pow((E0 - k1[2] - k2[2]), 2); // this is 3 - momentum transfer squared
+    //std::cout << "q2 " << q2 <<"\n";
     c1 = pow(p1, 2) + pow(m_part, 2);
+    //std::cout << "c1 " << c1 <<"\n";
     c2 = pow(p2, 2) + pow(m_part, 2);
+    //std::cout << "c2 " << c2 << "\n";
     JS = 1/c1 - 1/c2;//units of 1/GeV^2//scalar current, units of GeV^ - 2;
+    //std::cout << "JS " << JS <<"\n";
     i = 0;
     while(i < 2){
       JT[i] = k1[i]/c1 + k2[i]/c2;//vector current, units of GeV^ - 1;
+      //std::cout << "JT[i] " << JT[i] <<"\n";
       i++;
+      
     }
 
 
-    phi_JT = acos(JT[1]/sqrt(pow(JT[1],2) + pow(JT[2], 2)));//phi angle of JT wrt to x axis, radians
-    if (JT[2] < 0) phi_JT = 2*pi - phi_JT;
+    phi_JT = acos(JT[0]/sqrt(pow(JT[0],2) + pow(JT[1], 2)));//phi angle of JT wrt to x axis, radians
+    if (JT[1] < 0) phi_JT = 2*pi - phi_JT;
+    //std::cout << "phi_JT " << phi_JT <<"\n";
 //
     W_unpol = pow(m_part,2) * pow(JS,2) + (pow(x,2) + pow((1 -x),2)) * (pow(JT[1],2) + pow(JT[2], 2));
+    //std::cout << "W_unpol " << W_unpol <<"\n";
 //     	W_pol = -2.*x*(1.-x)*((p2/c2)**2*cos(2.*phi2)+(p1/c1)**2*cos(2.*phi1)+2.*(p2/c2)*(p1/c1)*cos(phi1+phi2)) !the Bakmaev expression
 //	xsctn=2.*alpha**3*Z**2*E0**4*x**2*(1.-x)**2/(pi**2*q2_T**2)*(W_unpol+pol*W_pol) ! note the absence of cos(2phi_JT) in this expression
 //     &	*hbarc**2/100.*1.e9*FF2(q2_T,ztgt,nuc_FF) !units of nb/sr^2  The denominator uses the transverse 3-momentum transfer^2, 
     W_pol = -2 * x * (1 - x) * (pow(JT[1], 2) + pow(JT[2], 2));//this is my reduction of the Bakmaev equations;
-    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(pi,2) * pow(q2_T, 2) * (W_unpol + pol * cos(2 * phi_JT) * W_pol));
+    //std::cout << "W_pol " << W_pol <<"\n";
+    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(pi,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
+    //std::cout << xsctnOut << "\n";
 //this contains the cos(2phi_JT) term*hbarc**2/100.*1.e9*FF2(q2_T, ztgt, nuc_FF) //units of nb/sr^2 The denominator uses the transverse 3 - momentum transfer^2
 //
     return xsctnOut;
