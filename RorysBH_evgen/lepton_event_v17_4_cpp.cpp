@@ -8,9 +8,6 @@ struct density_rho0{
   double rho0, c_den[100], a_den[100]; //the overall normalization factor for nuclear charge densities
 };
 
-struct ZBQL0001{
-  double ZBQLIX[43], B, C;
-};
 
 struct Brem_spect{
   double Eg[500], Br[500];
@@ -55,10 +52,10 @@ double FF(double Q2, int ztgt);
 //
 //
 double E0, theta_min, theta_max;
-double pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, k1[3], k2[3], m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, m_pi, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma;
+double delta_cos, delta_x_value, bin_width, x_value_hi, x_value_lo, total_xscn_old, delta_total_xscn, pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, k1[3], k2[3], m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, m_pi, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma, data_array_w[200], data_array_x[200], data_array_t[200], data_array_phi_JT[200], data_array_nonlinear_t[200], data_array_Egamma[200], data_array_cos[200], cross_max_old, delta_cross_max;
 int iseed;
 int i, itest[4], nevent, j, nfail, bad_max, i_array, j_array, ztgt, phase_space; 
-bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_log_t, nuc_FF, muon, electron, pion_hypothesis, brem_init, cobrems;
+bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_nonlinear_t, nuc_FF, muon, electron, pion_hypothesis, brem_init, cobrems, hist_cos, integral_xsctn, w_cut, nuc_FF, verbose_output;
 //
 //	Standard CPP configuration 
 //	double ztgt = 82, E0 = 5.5, pol = 1.0, theta_min = 0.80,theta_max = 5.3; //Standard CPP configuration, min angle to TOF and max angle to MWPC
@@ -66,27 +63,26 @@ bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_log_t,
 //	Standard GlueX configuration
 //	data ztgt,E0,E_coherent,pol,theta_min,theta_max /1,11.0,8.7,1.0,0.90,13.12/	//standard GlueX config., min and max angles in deg. to TOF
 int main(){
-  std::cout << "i started the function\n";
     ztgt = 1, E0 = 11.0, E_coherent = 8.7, pol = 1.0, theta_min = 0.090, theta_max = 13.12;///standard GlueX config., min and max angles in deg. to TOF;
 //	Set tagging interval
+    double w_min = 0.25, w_max = 0.621;
     E_hi = 8.8, E_lo = 8.6;
-    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 10;
+    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 1000000;
     m_e = 0.000511, m_muon = 0.105658, m_pi = 0.139570, hbarc = 0.197;
 //	
 //  Histogram parameters
-    delta_w = 0.02, delta_t = 0.0002, delta_x = 0.02, delta_phi = 5.0, frac_delta_t = 0.2, delta_Egamma = 0.05; //units of GeV, GeV^2, //DIMENSIONless, degrees,
+    delta_w = 0.02, delta_t = 0.0002, delta_x = 0.02, delta_phi = 5.0, frac_delta_t = 0.2, delta_Egamma = 0.05, delta_cos = 0.0001; //units of GeV, GeV^2, //DIMENSIONless, degrees,
 //											fractional bin width in t, GeV
 //
 //  Target information
-    Atgt[0] = 1.0, tgtlen[0] = 0.0338, radlen[0] = 63.04;//tgtlen = # Rad lengths, radlen = rad length of material in g/cm^2;
+    Atgt[1] = 1.0, tgtlen[1] = 0.0338, radlen[1] = 63.04;//tgtlen = # Rad lengths, radlen = rad length of material in g/cm^2;
 //								this target is based on 30 cm LH2
-    Atgt[5] = 12.0, tgtlen[5] = 0.05, radlen[5] = 42.70, density_rho0.c_den[5] = 2.45, density_rho0.a_den[5] = 0.524;//RL is in g/cm^2;
-    Atgt[13] = 28.0, tgtlen[13] = 0.05, radlen[13] = 21.82, density_rho0.c_den[13] = 3.14, density_rho0.a_den[13] = 0.537;//units of c_den and a_den are fm;
-    Atgt[19] = 40.0, tgtlen[19] = 0.05, radlen[19] = 16.12, density_rho0.c_den[19] = 3.51, density_rho0.a_den[19] = 0.563;//target length is in units of RL;
-    Atgt[25] = 56.0, tgtlen[25] = 0.05, radlen[25] = 13.84, density_rho0.c_den[25] = 3.971,density_rho0.a_den[25] = 0.5935;//RL is g/cm^2;
-    Atgt[49] = 116.0, tgtlen[49] = 0.05, radlen[49] = 8.82, density_rho0.c_den[49] = 5.416, density_rho0.a_den[49] = 0.552;
-    Atgt[81] = 208.0, tgtlen[81] = 0.05, radlen[81] = 6.37;
-    std::cout << "i finished array assignments\n";
+    Atgt[6] = 12.0, tgtlen[6] = 0.05, radlen[6] = 42.70, density_rho0.c_den[6] = 2.45, density_rho0.a_den[6] = 0.524;//RL is in g/cm^2;
+    Atgt[14] = 28.0, tgtlen[14] = 0.05, radlen[14] = 21.82, density_rho0.c_den[14] = 3.14, density_rho0.a_den[14] = 0.537;//units of c_den and a_den are fm;
+    Atgt[20] = 40.0, tgtlen[20] = 0.05, radlen[20] = 16.12, density_rho0.c_den[20] = 3.51, density_rho0.a_den[20] = 0.563;//target length is in units of RL;
+    Atgt[26] = 56.0, tgtlen[26] = 0.05, radlen[26] = 13.84, density_rho0.c_den[26] = 3.971,density_rho0.a_den[26] = 0.5935;//RL is g/cm^2;
+    Atgt[50] = 116.0, tgtlen[50] = 0.05, radlen[50] = 8.82, density_rho0.c_den[50] = 5.416, density_rho0.a_den[50] = 0.552;
+    Atgt[82] = 208.0, tgtlen[82] = 0.05, radlen[82] = 6.37;
 //COMMON/density_rho0/rho0, c_den, a_den//the overall normalization factor for nuclear charge densities
 //
     double zlo, zhi;
@@ -95,19 +91,6 @@ int main(){
 //       Initializes seed array etc. for random number generator.
 //       The values below have themselves been generated using the
 //       NAG generator.
-//
-    double ZBQLIX[43], B, C;
-    ZBQLIX[0] = 8.001441, ZBQLIX[1] = 5.5321801, ZBQLIX[2] = 1.69570999, ZBQLIX[3] = 2.88589930, ZBQLIX[4] = 2.91581871, ZBQLIX[5] = 1.03842493, ZBQLIX[6] = 7.9952507,
-    ZBQLIX[7] = 3.81202335, ZBQLIX[8] = 3.11575334, ZBQLIX[9] = 4.02878631, ZBQLIX[10] = 2.49757109, ZBQLIX[11] = 1.15192595, ZBQLIX[12] = 2.10629619, ZBQLIX[13] = 3.99952890,
-    ZBQLIX[14] = 4.12280521, ZBQLIX[15] = 1.33873288, ZBQLIX[16] = 7.1345525, ZBQLIX[17] = 2.23467704, ZBQLIX[18] = 2.82934796, ZBQLIX[19] = 9.9756750, ZBQLIX[20] = 1.68564303,
-    ZBQLIX[21] = 2.86817366, ZBQLIX[22] = 1.14310713, ZBQLIX[23] = 3.47045253, ZBQLIX[24] = 9.3762426, ZBQLIX[25] = 1.09670477, ZBQLIX[26] = 3.20029657, ZBQLIX[27] = 3.26369301,
-    ZBQLIX[28] = 9.441177, ZBQLIX[29] = 3.53244738, ZBQLIX[30] = 2.44771580, ZBQLIX[31] = 1.59804337, ZBQLIX[32] = 2.07319904, ZBQLIX[33] = 3.37342907, ZBQLIX[34] = 3.75423178,
-    ZBQLIX[35] = 7.0893571, ZBQLIX[36] = 4.26059785, ZBQLIX[37] = 3.95854390, ZBQLIX[38] = 2.0081010, ZBQLIX[39] = 5.9250059, ZBQLIX[40] = 1.62176640, ZBQLIX[41] = 3.20429173,
-    ZBQLIX[42] = 2.63576576;
-    std::cout << "i finished ZBQLIX\n";
-    B = 4.294967291;
-    C = 0.0;
-//
     iseed = 0;//set equal to 0 for the // program to do a call to the system clock to initialize random number generator;
 //			!for random number initialization
 //
@@ -117,84 +100,85 @@ int main(){
     pi = acos(temp);
 //
 //Find the delta log t step
-    delta_log_t = log10(1. + frac_delta_t);
+    //delta_log_t = log10(1. + frac_delta_t);
 
 //Set target mass in GeV
     mtgt = Atgt[ztgt]*0.931494;
     if (ztgt == 1) mtgt = 0.93828;
     i = 0;
-    std::cout << "i got to the first while loop\n";
     while(i < 200){
-        data_array[i] = 0;
+        data_array_w[i] = 0;
+        data_array_x[i] = 0;
+        data_array_t[i] = 0;
+        data_array_phi_JT[i] = 0;
+        data_array_nonlinear_t[i] = 0;
+        data_array_Egamma[i] = 0;
+        data_array_cos[i] = 0;
         error_array[i] = 0;
         i++;
     }
-    std::cout << "i finished the first while loop\n";
-//Initialize Brem. distribution: select 1/Egamma or coherent Brems. file
-    cobrems = true;//set true for scanfing coherent Brems. file, false for using a 1/Egamma distribution;
-    if(cobrems == true){ // scanf coherent Brem. file
-      brem_init = true;
-      std::cout << "i am calling Brem function\n";
-      temp = Brem(brem_init, cobrems, E0, Egamma);//scanf coherent brems file, then set brem_init = false;
-    }
-    int pause;
-    std::cout << "this is the pause\n";
-    //std::cin >> pause;
+    //Initialize parameters for variable bin-width t distribution: bin_width_t = alpha*(t+beta)**gamma
+    double bin_t_min = 0.0001;
+    double alpha_t = 0.02;
+    double gamma_t = 0.47;
+    double beta_t = pow((bin_t_min/alpha_t),(1/gamma_t));
+
 //Start logical assignments
 
-//Only one of the histogram logicals can be true, the rest must be false.   The event output can be turned on independent of histograming.
-    std::cout << "i got to the logicals\n";
-    hist_w = false;
-    hist_x = false;
-    hist_t = false;
+//Can turn on any or all of these logicals.
+
+    hist_w = true;
+    hist_x = true;
+    hist_t = true;
     hist_phi_JT = true;
-    hist_log_t = false;
-    hist_Egamma = false;
-    output_event = true;
+    hist_nonlinear_t = true;
+    hist_Egamma = true;
+    hist_cos = true;
+    output_event = true;     //for writing event file
+    integral_xsctn = false;  //set true for outputting integrated cross sections
+    w_cut = false;           //set true for applying w cuts to the data
+    nuc_FF = true;           //set true for using a nuclear form factor, set false for FF=1;
+    cobrems = true;          //set true for scanfing coherent Brems. file, false for using a 1/Egamma distribution;
+    muon = false;            //set true for muons,false for electrons
+    verbose_output = true;  //set true if you want to see test outputs printed to your screen
+    electron = !muon;
+
+//Initialize Brem. distribution: select 1/Egamma or coherent Brems. file
+    
+    if(cobrems == true){ // scanf coherent Brem. file
+      brem_init = true;
+      temp = Brem(brem_init, cobrems, E0, Egamma);//scanf coherent brems file, then set brem_init = false;
+    }
 //Logical assignments
-    phase_space = 4;//theta = x**phase_space, with int phase_space >1 . Note: phase_space = 4 seems to be fastest.;
+    phase_space = 8;//theta = x**phase_space, with int phase_space >1 . Note: phase_space = 8 is the fastest for e+e-;
 //Set phase_space=0 for standard dcos theta/dx =1
     Rexp = float(phase_space);
-    nuc_FF = true;
-    muon = false;//this is how you change the particle type
-//electron = .not.muon;
+
     if (muon == true){
         m_part = m_muon;
         pion_hypothesis = false; //set true if you want calculated invariant masses with pion assumption;
     }else{
         m_part = m_e;
-        pion_hypothesis = false;//should always have this set false since we can distinguish e from mu;
+        pion_hypothesis = false; //should always have this set false since we can distinguish e from mu;
     }
 //
-    if (nuc_FF) 
-    {// setup the nuclear form factors
+    if (nuc_FF){// setup the nuclear form factors
         density_rho0.c_den[ztgt] = density_rho0.c_den[ztgt]/hbarc;
         density_rho0.a_den[ztgt] = density_rho0.a_den[ztgt]/hbarc;
-        density_init(ztgt); //for initializing the nuclear form factor(density_rho0.rho0 is density const.);
+        density_init(ztgt); //for initializing the nuclear form factor(density_rho0.rho0 is density const., nothing to do with rho0 meson);
     }
-//  
-/*
-    if((hist_w) || (hist_x) || (hist_t) || (hist_phi_JT) || (hist_log_t) || (hist_Egamma)){
-        std::ofstream histFile;
-        histFile.open("lepton_v17_4_hist.txt");
-    }
-    if (output_event){
-        std::ofstream outFile;
-        outFile.open("lepton_v17_4_event.txt");
-    }/**/
-//
-//	End logical assignments
-//
-//***********************************
+
 //	Evaluate the cross section at one kinematic point at coherent peak
-    x = 0.5;
+    x = 0.4;
     theta1 = theta_min * (pi/180);
     theta2 = theta_min * (pi/180);
     phi1 = 90 * (pi/180);
     phi2 = 270 * (pi/180);
     cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF);
-    std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << "\n";
-    std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
+    if(verbose_output == true){
+        std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << "\n";
+        std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
+    }
 //*************************************
     theta_min = theta_min * pi/180;//switch to radians;
     theta_max = theta_max * pi/180;
@@ -213,10 +197,9 @@ int main(){
 //
     j = 0;
     i = 0;
-    std::cout << "i made it to the first loop\n";
-    while(j < 3){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
+    while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
 //cross section*Brem converges
-        cross_max = 0;
+        cross_max_old = cross_max;
         i = 0;
         while(i < itest[j]){//find maximum cross section in allowed phase space
             Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
@@ -248,49 +231,53 @@ int main(){
             i++;
             std::cout << i << "\n";
         }
-    
-        std::cout << "test events " << itest[j] <<  " maximum xsctn*Brem " <<  cross_max << "\n";
-        std::cout << "Egamma max " << Egamma_max << " x max " << xmax << " theta1 max " << theta1_max << " theta2 max " << theta2_max << " phi1 max " << phi1_max << " phi2 max " <<  phi2_max << "\n";
+        delta_cross_max = (cross_max - cross_max_old)/cross_max*100;
+        if(verbose_output == true){
+            std::cout << "test events " << itest[j] <<  " maximum xsctn*Brem " <<  cross_max << "\n";
+            std::cout << "Egamma max " << Egamma_max << " x max " << xmax << " theta1 max " << theta1_max << " theta2 max " << theta2_max << " phi1 max " << phi1_max << " phi2 max " <<  phi2_max << "\n";
+        }
         j++;
         std::cout << j << "\n";
     }
-    std::cout << "i have completed the maxtest loop\n";
 //**********************************************************************************************************
 // Loop over 4 samplings of the phase space at coherent peak, each a factor of x10 larger, to see if the integrated cross section converges
 // Set limits on energy fraction
-    j = 0;
-    i = 0;
-    x_max = (E_coherent - m_part)/E_coherent;
-    x_min = m_part/E_coherent;
-    std::cout << "i am starting the next loop\n";
-    while(j < 3){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
+    if(integral_xsctn == true){
+        j = 0;
+        i = 0;
+        x_max = (E_coherent - m_part)/E_coherent;
+        x_min = m_part/E_coherent;
+        total_xscn = 0;
+        while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
 //cross section at the coherent peak converges
-        cross_sum = 0;
-        while(i < itest[j]){
-            x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
-            phi1 = 2*pi * RandomReal(zlo, zhi);
-            phi2 = 2*pi * RandomReal(zlo, zhi);
-            xs1 = RandomReal(xs_min, xs_max);
-            xs2 = RandomReal(xs_min, xs_max);
-            if (phase_space == 0){// dcos theta/dx = 1
-                theta1 = acos(xs1);
-                theta2 = acos(xs2);
-                jacobian = 1;
-            }else{
-                theta1 = pow(xs1,phase_space);
-                theta2 = pow(xs2,phase_space);
-                jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
-            }
-            cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian;
-            cross_sum = cross_sum + cross_section;
+            cross_sum = 0;
+            while(i < itest[j]){
+                x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
+                phi1 = 2*pi * RandomReal(zlo, zhi);
+                phi2 = 2*pi * RandomReal(zlo, zhi);
+                xs1 = RandomReal(xs_min, xs_max);
+                xs2 = RandomReal(xs_min, xs_max);
+                if (phase_space == 0){// dcos theta/dx = 1
+                    theta1 = acos(xs1);
+                    theta2 = acos(xs2);
+                    jacobian = 1;
+                }else{
+                    theta1 = pow(xs1,phase_space);
+                    theta2 = pow(xs2,phase_space);
+                    jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
+                }
+                cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian;
+                analysis(Egamma, mtgt, k1, k2, ktgt, w_mumu, t, missing_mass, m_e, pion_hypothesis);
+                cross_sum = cross_sum + cross_section;
             i++;
             std::cout << i << "\n";
         }
         total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*pi), 2) * (x_max - x_min);
+        delta_total_xscn = (total_xscn-total_xscn_old)/total_xscn*100;
         std::cout << "test events " << itest[j] << " Egamma " <<  E_coherent << " total cross section nb " <<  total_xscn << "\n";
         j++;
+        }
     }
-    std::cout << "i am about to start event generation\n";
 
 
 //*************************************************************************
@@ -335,21 +322,47 @@ int main(){
             nfail = nfail + 1;
             goto g100;
         }
-//	Event selection succeeds: 
-//
         analysis(Egamma, mtgt, k1, k2, ktgt, w_mumu, t, missing_mass, m_part, pion_hypothesis);//analyze the event;
-//							
-//		Do the histogramming
+        if(w_cut && (w_mumu < w_min || w_mumu > w_max)) goto g100;
+
+//  
+//  ******************************Event selection succeeds:*********************************************
+//		Do all the histogramming
 //
-        if(hist_w) i_array = int((w_mumu - 0.200)/delta_w);//w distribution;
-        if(hist_x) i_array = int(x/delta_x);//x distribution
-        if(hist_t) i_array = int(t/delta_t);//t distribution;
-        if(hist_phi_JT) i_array = int(phi_JT*180/pi/delta_phi); //JT phi distribution in degrees;
-        if(hist_log_t) i_array = int((log10(t) + 6)/delta_log_t);// 10^ - 6 GeV^2 is bin 0;
-        if(hist_Egamma) i_array = int(Egamma/delta_Egamma);//photon energy distribution;
-        if(i_array < 0) i_array = 0;
-        if (i_array > 200) i_array = 200;
-        data_array[i_array] = data_array[i_array] + 1;
+        i_array = int((w_mumu - 0.200)/delta_w);//w distribution;
+        if(i_array < 1) i_array = 1;
+        if(i_array > 200) i_array = 200;
+        data_array_w[i_array] = data_array_w[i_array] + 1;
+
+        i_array=int(x/delta_x)+1; //x distribution
+        if(i_array < 1) i_array = 1;
+        if(i_array > 200) i_array =200;
+        data_array_w[i_array] = data_array_x[i_array] + 1;
+        
+        i_array = int(t/delta_t);//t distribution;
+        if(i_array < 1)i_array = 1;
+        if(i_array > 200) i_array = 200;
+        data_array_w[i_array] = data_array_x[i_array] + 1;
+
+        i_array = int(phi_JT*180/pi/delta_phi); //JT phi distribution in degrees;
+        if(i_array < 1)i_array = 1;
+        if(i_array > 200) i_array = 200;
+        data_array_w[i_array] = data_array_x[i_array] + 1;
+
+        i_array= int((pow((t + beta_t), (1 + gamma_t)) - pow(beta_t, (1 - gamma_t)))/(alpha_t * (1 - gamma_t))) + 1;  // variable t-bin width
+		if (i_array < 1) i_array=1;
+		if (i_array > 200) i_array=200;		
+		data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
+
+        i_array = int(Egamma - E_lo/delta_Egamma) + 1 ;//photon energy distribution;
+        if(i_array < 1)i_array = 1;
+        if(i_array > 200) i_array = 200;
+        data_array_w[i_array] = data_array_x[i_array] + 1;
+
+        i_array = int((cos_max - cos(theta1))/delta_Egamma) + 1;
+        if(i_array < 1)i_array = 1;
+        if(i_array > 200)i_array = 200;
+        data_array_cos[i_array] = data_array_cos[i_array] + 1;
 //
 //	3-momentum event output
         if(output_event){
@@ -359,78 +372,102 @@ int main(){
         }
 	//g200:
 // format(2x, f6.3, 1x, 9(f10.6, 1x))
-//
-        //if (i % 100 == 0) std::cout << ' event # ' << i;
-        i++;
-        std::cout << i << "\n";
-    }
-
-
-    std::cout << "i have finished the event generation\n";
-//   Event generation ends
-//	
-    float failure = float(nfail)/float(nevent);
-    std::cout <<  "Failures per event = " << failure << " Events with cross section exceeding max xsctn = " << bad_max << "\n";
-    std::ofstream histFile;
-    histFile.open("lepton_v17_4_hist.txt");
-    int i = 0;
-    while(i < 200){//printf out the arrays
-        std::cout << "histogramming... ";
-        if(hist_w){
-        
-            //std::ofstream histFile;
-            //histFile.open("lepton_v17_4_hist.txt");
-            x_value = float(i) * delta_w + 0.200;
-            error_array[i] = sqrt(data_array[i]);
-            histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            //histFile.close();
-        }else if (hist_x){
-            //std::ofstream histFile;
-            //histFile.open("lepton_v17_4_hist.txt");
-            x_value = float(i) * delta_x;
-            error_array[i] = sqrt(data_array[i]);
-            histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            //histFile.close();
-        }else if(hist_t){
-            //std::ofstream histFile;
-            //histFile.open("lepton_v17_4_hist.txt");
-            x_value = float(i)*delta_t;
-            error_array[i] = sqrt(data_array[i]);
-            histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            //histFile.close();
-        }else if(hist_phi_JT){
-            //std::ofstream histFile;
-            //histFile.open("lepton_v17_4_hist.txt");
-            x_value = float(i)*delta_phi;
-            if((x_value == 0.) || (x_value == 360.)) data_array[i] = 2.*data_array[i]; // this is a binning problem
-            error_array[i] = sqrt(data_array[i]);
-            histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            //histFile.close();
-        }else if(hist_log_t){
-            //std::ofstream histFile;
-            //histFile.open("lepton_v17_4_hist.txt");
-            x_value = pow(10, (float(i) * delta_log_t-6));
-            error_array[i] = sqrt(data_array[i])/(pow(10,(float(i+1)*delta_log_t-6)) - pow(10,(float(i-1) * delta_log_t - 6))) * 2;
-            data_array[i] = data_array[i]/(pow(10,(float(i+1) * delta_log_t-6)) - pow(10,(float(i-1) * delta_log_t - 6))) * 2;
-            histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            //histFile.close();
-        }else if(hist_Egamma){
-            //std::ofstream histFile;
-            //histFile.open("lepton_v17_4_hist.txt");
-            x_value = float(i) * delta_Egamma;
-            error_array[i] = sqrt(data_array[i]);
-            histFile << x_value << " " << data_array[i] << " " << error_array[i] << "\n";
-            //histFile.close();
+        if(verbose_output && i % 50 == 0){
+            std::cout << " event # " << i;
         }
         i++;
     }
-    histFile.close();
-
-
-//
-
-//
-//exit(0);
+//   Event generation ends
+//	
+    float failure = float(nfail)/float(nevent);
+    if(verbose_output){
+        std::cout << "Phase space parameter = " << phase_space <<  "Failures per event = " << failure << " Events with cross section exceeding max xsctn = " << bad_max << "\n";
+    }
+    int i = 0;
+    if(hist_w){
+        i = 0;
+        std::ofstream w_histFile;
+        w_histFile.open("lepton_w.txt");
+        while(i < 200){
+            x_value = w_min + (float(i) - 0.5) * delta_w;
+            error_array[i] = sqrt(data_array_w[i]);
+            w_histFile << x_value << " " << data_array_w[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+        w_histFile.close();
+    }
+    if (hist_x){
+        i = 0;
+        std::ofstream x_histFile;
+        x_histFile.open("lepton_x.txt");
+        while(i < 200){
+            x_value = (float(i)-0.5) * delta_x;
+            error_array[i] = sqrt(data_array_x[i]);
+            x_histFile << x_value << " " << data_array_x[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+        x_histFile.close();
+    }
+    if(hist_t){
+        i = 0;
+        std::ofstream t_histFile;
+        t_histFile.open("lepton_t.txt");
+        while(i < 200){
+            x_value = (float(i) - 0.5) * delta_t;
+            error_array[i] = sqrt(data_array_t[i]);
+            t_histFile << x_value << " " << data_array_t[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+        t_histFile.close();
+    }
+    if(hist_phi_JT){
+        std::ofstream phi_JT_histFile;
+        phi_JT_histFile.open("lepton_phi_JT.txt");
+        while(i < 200){
+            x_value = (float(i) - 0.5)*delta_phi;
+            error_array[i] = sqrt(data_array_phi_JT[i]);
+            phi_JT_histFile << x_value << " " << data_array_phi_JT[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+        phi_JT_histFile.close();
+    }
+    if(hist_nonlinear_t){
+        std::ofstream nonlinear_t_histFile;
+        nonlinear_t_histFile.open("lepton_nonlinear_.txt");
+        while(i < 200){
+            x_value_lo = pow((alpha_t * (1 - gamma_t) * float(i-1) + pow(beta_t, 1 - gamma_t)), 1/(1-gamma_t)) - beta_t;
+            x_value = pow((alpha_t * (1 - gamma_t) * float(i - 0.5) + pow(beta_t, 1 - gamma_t)), 1/(1-gamma_t)) - beta_t;
+            x_value_hi = pow((alpha_t * (1 - gamma_t) * float(i) + pow(beta_t, 1 - gamma_t)), 1/(1-gamma_t)) - beta_t;
+            bin_width = x_value_hi - x_value_lo;
+            delta_x_value = bin_width/2;
+            error_array[i] = sqrt(data_array_nonlinear_t[i])/bin_width;
+            data_array_nonlinear_t[i] = data_array_nonlinear_t[i]/bin_width;
+            nonlinear_t_histFile << x_value << " " << delta_x_value << " "<< data_array_nonlinear_t[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+        nonlinear_t_histFile.close();
+    }
+    if(hist_Egamma){
+        std::ofstream Egamma_histFile;
+        Egamma_histFile.open("lepton_Egamma.txt");
+        while(i < 200){
+            x_value = E_lo + (float(i) - 0.5) * delta_Egamma;
+            error_array[i] = sqrt(data_array_Egamma[i]);
+            Egamma_histFile << x_value << " " << data_array_Egamma[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+        Egamma_histFile.close();
+    }
+    if(hist_cos){
+        std::ofstream cos_histFile;
+        cos_histFile.open("lepton_cos.txt");
+        while(i < 200){
+            x_value = cos_max - (float(i) - 0.5) * delta_cos;
+            error_array[i] = sqrt(data_array_cos[i]);
+            cos_histFile << x_value << " " << data_array_cos[i] << " " << error_array[i];
+        }
+        cos_histFile.close();
+    }
 }
 
 
