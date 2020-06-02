@@ -1,4 +1,4 @@
-//Date: 6/2/2020 2:00 PM
+//Date: 6/2/2020 3:55 PM
 
 #include <stdio.h>
 #include <math.h>
@@ -92,13 +92,9 @@ int main(){
 //       Initializes seed array etc. for random number generator.
 //       The values below have themselves been generated using the
 //       NAG generator.
-    iseed = 0;//set equal to 0 for the // program to do a call to the system clock to initialize random number generator;
-//			!for random number initialization
 //
 //  Initializations
 //
-    temp = -1;
-    pi = acos(temp);
 //
 //Find the delta log t step
     //delta_log_t = log10(1. + frac_delta_t);
@@ -171,18 +167,18 @@ int main(){
 
 //	Evaluate the cross section at one kinematic point at coherent peak
     x = 0.4;
-    theta1 = theta_min * (pi/180);
-    theta2 = theta_min * (pi/180);
-    phi1 = 90 * (pi/180);
-    phi2 = 270 * (pi/180);
+    theta1 = theta_min * (m_pi/180);
+    theta2 = theta_min * (m_pi/180);
+    phi1 = 90 * (m_pi/180);
+    phi2 = 270 * (m_pi/180);
     cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF);
     if(verbose_output == true){
         std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << "\n";
         std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
     }
 //*************************************
-    theta_min = theta_min * pi/180;//switch to radians;
-    theta_max = theta_max * pi/180;
+    theta_min = theta_min * m_pi/180;//switch to radians;
+    theta_max = theta_max * m_pi/180;
     cos_max = cos(theta_min);
     cos_min = cos(theta_max);
 // Limits on xs
@@ -205,8 +201,8 @@ int main(){
         while(i < itest[j]){//find maximum cross section in allowed phase space
             Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
             x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
-            phi1 = 90 * pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
-            phi2 = 270 * pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
+            phi1 = 90 * m_pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
+            phi2 = 270 * m_pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
             xs2 = RandomReal(xs_min, xs_max);
             if (phase_space == 0) {// dcos theta/dx = 1
                 theta1 = theta_min;//make a guess for theta1
@@ -223,10 +219,10 @@ int main(){
                 cross_max = cross_section;
                 Egamma_max = Egamma;
                 xmax = x;
-                theta1_max = theta1 * 180/pi;
-                theta2_max = theta2 * 180/pi;
-                phi1_max = phi1 * 180/pi;
-                phi2_max = phi2 * 180/pi;
+                theta1_max = theta1 * 180/m_pi;
+                theta2_max = theta2 * 180/m_pi;
+                phi1_max = phi1 * 180/m_pi;
+                phi2_max = phi2 * 180/m_pi;
             
             }
             i++;
@@ -255,8 +251,8 @@ int main(){
 	    i = 0;
             while(i < itest[j]){
                 x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
-                phi1 = 2*pi * RandomReal(zlo, zhi);
-                phi2 = 2*pi * RandomReal(zlo, zhi);
+                phi1 = 2*m_pi * RandomReal(zlo, zhi);
+                phi2 = 2*m_pi * RandomReal(zlo, zhi);
                 xs1 = RandomReal(xs_min, xs_max);
                 xs2 = RandomReal(xs_min, xs_max);
                 if (phase_space == 0){// dcos theta/dx = 1
@@ -274,7 +270,7 @@ int main(){
             i++;
             std::cout << i << "\n";
 	    }
-        total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*pi), 2) * (x_max - x_min);
+        total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*m_pi), 2) * (x_max - x_min);
         delta_total_xscn = (total_xscn-total_xscn_old)/total_xscn*100;
         std::cout << "test events " << itest[j] << " Egamma " <<  E_coherent << " total cross section nb " <<  total_xscn << "\n";
         j++;
@@ -303,8 +299,8 @@ int main(){
         x = RandomReal(x_min, x_max);//energy fraction
   //	Test x to make sure it's within the allowed range for the photon energy Egamma
         if((x >= ((Egamma - m_part)/Egamma)) || (x <= (m_part/Egamma))) goto g100; // x is out of range, try again
-        phi1 = 2 * pi * RandomReal(zlo, zhi);
-        phi2 = 2 * pi * RandomReal(zlo, zhi);
+        phi1 = 2 * m_pi * RandomReal(zlo, zhi);
+        phi2 = 2 * m_pi * RandomReal(zlo, zhi);
         xs1 = RandomReal(xs_min, xs_max);
         xs2 = RandomReal(xs_min, xs_max);
         if(phase_space == 0){// dcos theta/dx = 1
@@ -317,7 +313,7 @@ int main(){
             jacobian = (Rexp * pow(xs1,(phase_space-1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1)) * sin(pow(xs2,phase_space)));
         }
 
-        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF) * jacobian * Brem(brem_init, cobrems, E0, Egamma);
         if (cross_section > cross_max){
             bad_max = bad_max + 1;//an occurrence of cross section larger than cross_max, not supposed to happen
             std::cout <<  "bad max cross section= " <<  cross_section << "\n";
@@ -328,45 +324,74 @@ int main(){
             goto g100;
         }
         analysis(Egamma, mtgt, k1, k2, ktgt, w_mumu, t, missing_mass, m_part, pion_hypothesis);//analyze the event;
+        
         if(w_cut && (w_mumu < w_min || w_mumu > w_max)) goto g100;
 
 //  
 //  ******************************Event selection succeeds:*********************************************
 //		Do all the histogramming
 //
-        i_array = int((w_mumu - 0.200)/delta_w);//w distribution;
-        if(i_array < 1) i_array = 1;
-        if(i_array > 200) i_array = 200;
+        i_array = int(w_mumu/delta_w) + 1;//w distribution;
+        if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array = 200;
+        }
         data_array_w[i_array] = data_array_w[i_array] + 1;
 
         i_array=int(x/delta_x)+1; //x distribution
-        if(i_array < 1) i_array = 1;
-        if(i_array > 200) i_array =200;
+        if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array =200;
+        }
         data_array_w[i_array] = data_array_x[i_array] + 1;
         
         i_array = int(t/delta_t);//t distribution;
-        if(i_array < 1)i_array = 1;
-        if(i_array > 200) i_array = 200;
+        if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array =200;
+        }
         data_array_w[i_array] = data_array_x[i_array] + 1;
 
-        i_array = int(phi_JT*180/pi/delta_phi); //JT phi distribution in degrees;
-        if(i_array < 1)i_array = 1;
-        if(i_array > 200) i_array = 200;
+        i_array = int(phi_JT*180/m_pi/delta_phi); //JT phi distribution in degrees;
+        if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array =200;
+        }
         data_array_w[i_array] = data_array_x[i_array] + 1;
 
         i_array = int((pow((t + beta_t), (1 + gamma_t)) - pow(beta_t, (1 - gamma_t)))/(alpha_t * (1 - gamma_t))) + 1;  // variable t-bin width
-	if (i_array < 1) i_array=1;
-        if (i_array > 200) i_array=200;		
-	data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
+	    if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array =200;
+        }	
+	    data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
 
         i_array = int(Egamma - E_lo/delta_Egamma) + 1 ;//photon energy distribution;
-        if(i_array < 1)i_array = 1;
-        if(i_array > 200) i_array = 200;
+        if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array =200;
+        }
         data_array_w[i_array] = data_array_x[i_array] + 1;
 
         i_array = int((cos_max - cos(theta1))/delta_Egamma) + 1;
-        if(i_array < 1)i_array = 1;
-        if(i_array > 200)i_array = 200;
+        if(i_array < 1){
+            i_array = 1;
+        }
+        if(i_array > 200){
+            i_array =200;
+        }
         data_array_cos[i_array] = data_array_cos[i_array] + 1;
 //	3-momentum event output
         if(output_event){
@@ -531,7 +556,6 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     //
     alpha = 7.297352e-3, hbarc = 0.197;
     //
-    pi = acos(-1);
     //
     Z = float(ztgt);
     E1 = E0 * x;
@@ -577,7 +601,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
 
 
     phi_JT = acos(JT[0]/sqrt(pow(JT[0],2) + pow(JT[1], 2)));//phi angle of JT wrt to x axis, radians
-    if (JT[1] < 0) phi_JT = 2*pi - phi_JT;
+    if (JT[1] < 0) phi_JT = 2*m_pi - phi_JT;
     //std::cout << "phi_JT " << phi_JT <<"\n";
 //
     W_unpol = pow(m_part,2) * pow(JS,2) + (pow(x,2) + pow((1 -x),2)) * (pow(JT[1],2) + pow(JT[2], 2));
@@ -587,7 +611,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
 //     &	*hbarc**2/100.*1.e9*FF2(q2_T,ztgt,nuc_FF) !units of nb/sr^2  The denominator uses the transverse 3-momentum transfer^2, 
     W_pol = -2 * x * (1 - x) * (pow(JT[1], 2) + pow(JT[2], 2));//this is my reduction of the Bakmaev equations;
     //std::cout << "W_pol " << W_pol <<"\n";
-    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(pi,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
+    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(m_pi,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
     //std::cout << xsctnOut << "\n";
 //this contains the cos(2phi_JT) term*hbarc**2/100.*1.e9*FF2(q2_T, ztgt, nuc_FF) //units of nb/sr^2 The denominator uses the transverse 3 - momentum transfer^2
 //
@@ -634,8 +658,7 @@ double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[
 {
     // implicit none
   double E1, E2, ks[3], m_x, analysisOut;
-    double m_pi = 0.139570;
-    pi = acos(-1);
+    double mass_pi = 0.139570;
     E1 = sqrt(pow(k1[0], 2) + pow(k1[1], 2) + pow(k1[2], 2) + pow(m_part, 2));//lepton energies
     E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_part, 2));
     ks[0] = k1[0] + k2[0];//lepton summed momentum
@@ -649,7 +672,9 @@ double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[
     //
     //		mu mu invariant mass, possibly with pion hypothesis
     m_x = m_part;
-    if (pion_hypothesis) m_x = m_pi;
+    if (pion_hypothesis){
+        m_x = mass_pi;
+    }
     E1 = sqrt(pow(k1[0], 2) + pow(k1[1],2) + pow(k1[2], 2) + pow(m_x, 2));//need to put in the mass hypothesis
     E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_x, 2));
     w_mumu = sqrt(pow(E1 + E2, 2) - pow(ks[0], 2) - pow(ks[1], 2) - pow(ks[2],2));
@@ -670,15 +695,14 @@ void density_init(int ztgt)
     int i;
     //COMMON/density_rho0/rho0, c_den, a_den
     //c
-    pi = acos(-1);
     //c
     rho0 = 0;
     if((ztgt == 82) || (ztgt == 1)) return;
     //c	These equations have to do with Fermi distribution, reference? 
-    w = 4 * pi * c_den[ztgt]/3 * (pow((pi * a_den[ztgt]), 2) + pow(c_den[ztgt], 2));
+    w = 4 * m_pi * c_den[ztgt]/3 * (pow((m_pi * a_den[ztgt]), 2) + pow(c_den[ztgt], 2));
     i = 0;
     while(i < 10){
-        w = w + 8 * pi * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * exp(-float(i)*c_den[ztgt]/a_den[ztgt])/pow(float(i), 3);
+        w = w + 8 * m_pi * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * exp(-float(i)*c_den[ztgt]/a_den[ztgt])/pow(float(i), 3);
         i++;
     }
     density_rho0.rho0 = 1/w;
@@ -693,7 +717,7 @@ void density_init(int ztgt)
 double FF(double Q2, int ztgt)
 {
     // implicit none
-    double q02, hbarc, Q, gamma, r[12], A[12], rho0, c_den[100], a_den[100], pi, norm, proton_rms;
+    double q02, hbarc, Q, gamma, r[12], A[12], rho0, c_den[100], a_den[100], norm, proton_rms;
     int i = 0;
     double returnFF;
     //c
@@ -717,7 +741,6 @@ double FF(double Q2, int ztgt)
     //
     //  Select the FF
     //
-    pi = acos(-1);
     Q = sqrt(Q2);
     //
     if (ztgt == 1) 
@@ -730,10 +753,10 @@ double FF(double Q2, int ztgt)
 	    i++;
         }while(i < 12);
     }else{ //for everything else use 2 - parameter fermi model, reference ?
-      returnFF = 4 * pow(pi,2) * rho0 * pow(a_den[ztgt], 3)/(pow((Q * a_den[ztgt]), 2) * pow((sinh(pi * Q * a_den[ztgt])),2)) * (pi * Q * a_den[ztgt] * cosh(pi * Q * a_den[ztgt]) * sin(Q * c_den[ztgt]) - Q * c_den[ztgt] * cos(Q * c_den[ztgt]) * sinh(pi * Q * a_den[ztgt]));
+      returnFF = 4 * pow(m_pi,2) * rho0 * pow(a_den[ztgt], 3)/(pow((Q * a_den[ztgt]), 2) * pow((sinh(m_pi * Q * a_den[ztgt])),2)) * (m_pi * Q * a_den[ztgt] * cosh(m_pi * Q * a_den[ztgt]) * sin(Q * c_den[ztgt]) - Q * c_den[ztgt] * cos(Q * c_den[ztgt]) * sinh(m_pi * Q * a_den[ztgt]));
       i = 0;
       do{
-	    returnFF = returnFF + 8 * pi * rho0 * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * float(i) * exp(-float(i) * c_den[ztgt]/a_den[ztgt])/pow((pow(float(i), 2) + pow((Q * a_den[ztgt]),2)),2);
+	    returnFF = returnFF + 8 * m_pi * rho0 * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * float(i) * exp(-float(i) * c_den[ztgt]/a_den[ztgt])/pow((pow(float(i), 2) + pow((Q * a_den[ztgt]),2)),2);
 	    i++;
       }while(i < 10);
     }
