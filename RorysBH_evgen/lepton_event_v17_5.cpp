@@ -1,5 +1,4 @@
-//Date: 6/2/2020 3:55 PM
-
+//Date: 6/2/2020 9:08 PM
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
@@ -20,9 +19,9 @@ struct density_rho0 density_rho0;
 struct Brem_spect brem_spect;
 
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma);
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF);//units of nb/sr^2
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double* phi_JT);//units of nb/sr^2
 double FF2(double q2, int ztgt, bool nuc_FF);
-double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis);
+double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t);
 void density_init(int ztgt);
 double FF(double Q2, int ztgt);
 
@@ -55,9 +54,9 @@ double FF(double Q2, int ztgt);
 double E0, theta_min, theta_max;
 double delta_cos, delta_x_value, bin_width, x_value_hi, x_value_lo, total_xscn_old, delta_total_xscn, pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, k1[3], k2[3], m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, m_pi, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma, data_array_w[200], data_array_x[200], data_array_t[200], data_array_phi_JT[200], data_array_nonlinear_t[200], data_array_Egamma[200], data_array_cos[200], cross_max_old, delta_cross_max;
 int iseed;
-int i, itest[4], nevent, j, nfail, bad_max, i_array, j_array, ztgt, phase_space; 
+int i, itest[4], nevent, j, nfail, bad_max, j_array, ztgt, phase_space; 
 bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_nonlinear_t, muon, electron, pion_hypothesis, brem_init, cobrems, hist_cos, integral_xsctn, w_cut, nuc_FF, verbose_output;
-//
+float xi_array, ti_array, wi_array, phi_JTi_array, cos_maxi_array, nonlinear_ti_array, Egammai_array;
 //	Standard CPP configuration 
 //	double ztgt = 82, E0 = 5.5, pol = 1.0, theta_min = 0.80,theta_max = 5.3; //Standard CPP configuration, min angle to TOF and max angle to MWPC
 //
@@ -68,7 +67,7 @@ int main(){
 //	Set tagging interval
     double w_min = 0.25, w_max = 0.621;
     E_hi = 8.8, E_lo = 8.6;
-    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 10;
+    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 200;
     m_e = 0.000511, m_muon = 0.105658, m_pi = 0.139570, hbarc = 0.197;
 //	
 //  Histogram parameters
@@ -171,7 +170,7 @@ int main(){
     theta2 = theta_min * (m_pi/180);
     phi1 = 90 * (m_pi/180);
     phi2 = 270 * (m_pi/180);
-    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF);
+    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT);
     if(verbose_output == true){
         std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << "\n";
         std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
@@ -194,7 +193,7 @@ int main(){
 //
     j = 0;
     i = 0;
-    while(j < 1){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
+    while(j < 2){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
 //cross section*Brem converges
         cross_max_old = cross_max;
         i = 0;
@@ -214,7 +213,7 @@ int main(){
                 theta2 = pow(xs2, phase_space);
                 jacobian = (Rexp * pow(xs1, (phase_space - 1)) * sin(pow(xs1, phase_space))) * (Rexp * pow(xs2,(phase_space - 1)) * sin(pow(xs2,phase_space)));
             }
-            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
             if(cross_section > cross_max){
                 cross_max = cross_section;
                 Egamma_max = Egamma;
@@ -245,8 +244,7 @@ int main(){
         x_max = (E_coherent - m_part)/E_coherent;
         x_min = m_part/E_coherent;
         total_xscn = 0;
-        while(j < 1){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the integrated
-//cross section at the coherent peak converges
+        while(j < 2){//cross section at the coherent peak converges
             cross_sum = 0;
 	    i = 0;
             while(i < itest[j]){
@@ -264,8 +262,8 @@ int main(){
                     theta2 = pow(xs2,phase_space);
                     jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
                 }
-                cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF)*jacobian;
-                analysis(Egamma, mtgt, k1, k2, ktgt, w_mumu, t, missing_mass, m_e, pion_hypothesis);
+                cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT)*jacobian;
+                analysis(Egamma, mtgt, k1, k2, ktgt, missing_mass, m_e ,pion_hypothesis , &w_mumu, &t);
                 cross_sum = cross_sum + cross_section;
             i++;
             std::cout << i << "\n";
@@ -290,7 +288,6 @@ int main(){
     nfail = 0;
     bad_max = 0;
     i = 0;
-    std::cout << "i made it to event generation\n";
     //
     while(i < nevent){
       std::cout << "nevent: " << i << "\n";
@@ -313,7 +310,7 @@ int main(){
             jacobian = (Rexp * pow(xs1,(phase_space-1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1)) * sin(pow(xs2,phase_space)));
         }
 
-        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF) * jacobian * Brem(brem_init, cobrems, E0, Egamma);
+        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT) * jacobian * Brem(brem_init, cobrems, E0, Egamma);
         if (cross_section > cross_max){
             bad_max = bad_max + 1;//an occurrence of cross section larger than cross_max, not supposed to happen
             std::cout <<  "bad max cross section= " <<  cross_section << "\n";
@@ -323,76 +320,83 @@ int main(){
             nfail = nfail + 1;
             goto g100;
         }
-        analysis(Egamma, mtgt, k1, k2, ktgt, w_mumu, t, missing_mass, m_part, pion_hypothesis);//analyze the event;
+        analysis(Egamma, mtgt, k1, k2, ktgt, missing_mass, m_part, pion_hypothesis, &w_mumu, &t);//analyze the event;
         
         if(w_cut && (w_mumu < w_min || w_mumu > w_max)) goto g100;
 
 //  
 //  ******************************Event selection succeeds:*********************************************
 //		Do all the histogramming
-//
-        i_array = int(w_mumu/delta_w) + 1;//w distribution;
-        if(i_array < 1){
-            i_array = 1;
+//      
+        wi_array = w_mumu/delta_w;//w distribution;
+        if(wi_array < 0){
+            wi_array = 0;
         }
-        if(i_array > 200){
-            i_array = 200;
+        if(wi_array > 200){
+            wi_array = 200;
         }
-        data_array_w[i_array] = data_array_w[i_array] + 1;
+        data_array_w[i] = wi_array;
+        //data_array_w[i_array] = data_array_w[i_array] + 1;
 
-        i_array=int(x/delta_x)+1; //x distribution
-        if(i_array < 1){
-            i_array = 1;
+        xi_array = x/delta_x; //x distribution
+        if(xi_array < 0){
+            xi_array = 0;
         }
-        if(i_array > 200){
-            i_array =200;
+        if(xi_array > 200){
+            xi_array = 200;
         }
-        data_array_w[i_array] = data_array_x[i_array] + 1;
-        
-        i_array = int(t/delta_t);//t distribution;
-        if(i_array < 1){
-            i_array = 1;
-        }
-        if(i_array > 200){
-            i_array =200;
-        }
-        data_array_w[i_array] = data_array_x[i_array] + 1;
+        //data_array_x[i_array] = data_array_x[i_array] + 1;
+        data_array_x[i] = xi_array;
 
-        i_array = int(phi_JT*180/m_pi/delta_phi); //JT phi distribution in degrees;
-        if(i_array < 1){
-            i_array = 1;
+        ti_array = t/delta_t;//t distribution;
+        if(ti_array < 0){
+            ti_array = 0;
         }
-        if(i_array > 200){
-            i_array =200;
+        if(ti_array > 200){
+            ti_array = 200;
         }
-        data_array_w[i_array] = data_array_x[i_array] + 1;
+        //data_array_t[i_array] = data_array_t[i_array] + 1;
+        data_array_t[i] = ti_array;
 
-        i_array = int((pow((t + beta_t), (1 + gamma_t)) - pow(beta_t, (1 - gamma_t)))/(alpha_t * (1 - gamma_t))) + 1;  // variable t-bin width
-	    if(i_array < 1){
-            i_array = 1;
+        phi_JTi_array = int(phi_JT*180/m_pi/delta_phi); //JT phi distribution in degrees;
+        if(phi_JTi_array < 0){
+            phi_JTi_array = 0;
         }
-        if(i_array > 200){
-            i_array =200;
+        if(phi_JTi_array > 200){
+            phi_JTi_array = 200;
+        }
+        //data_array_phi_JT[i_array] = data_array_phi_JT[i_array] + 1;
+        data_array_phi_JT[i] = phi_JTi_array;
+
+        nonlinear_ti_array = (pow((t + beta_t), (1 + gamma_t)) - pow(beta_t, (1 - gamma_t)))/(alpha_t * (1 - gamma_t));  // variable t-bin width
+	    if(nonlinear_ti_array < 0){
+            nonlinear_ti_array = 0;
+        }
+        if(nonlinear_ti_array > 200){
+            nonlinear_ti_array =200;
         }	
-	    data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
+	    //data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
+        data_array_nonlinear_t[i] = nonlinear_ti_array;
 
-        i_array = int(Egamma - E_lo/delta_Egamma) + 1 ;//photon energy distribution;
-        if(i_array < 1){
-            i_array = 1;
+        Egammai_array = (Egamma - E_lo)/delta_Egamma;//photon energy distribution;
+        if(Egammai_array < 0){
+            Egammai_array = 0;
         }
-        if(i_array > 200){
-            i_array =200;
+        if(Egammai_array > 200){
+            Egammai_array =200;
         }
-        data_array_w[i_array] = data_array_x[i_array] + 1;
+        //data_array_Egamma[i_array] = data_array_Egamma[i_array] + 1;
+        data_array_Egamma[i] = Egammai_array;
 
-        i_array = int((cos_max - cos(theta1))/delta_Egamma) + 1;
-        if(i_array < 1){
-            i_array = 1;
+        cos_maxi_array = (cos_max - cos(theta1))/delta_Egamma;
+        if(cos_maxi_array < 0){
+            cos_maxi_array = 0;
         }
-        if(i_array > 200){
-            i_array =200;
+        if(cos_maxi_array > 200){
+            cos_maxi_array =200;
         }
-        data_array_cos[i_array] = data_array_cos[i_array] + 1;
+        //data_array_cos[i_array] = data_array_cos[i_array] + 1;
+        data_array_cos[i] = cos_maxi_array;
 //	3-momentum event output
         if(output_event){
             std::ofstream outputFile;
@@ -418,6 +422,7 @@ int main(){
         while(i < 200){
             x_value = w_min + (float(i) - 0.5) * delta_w;
             error_array[i] = sqrt(data_array_w[i]);
+            //std::cout << "w " << data_array_w[i] << "\n";
             w_histFile << x_value << " " << data_array_w[i] << " " << error_array[i] << "\n";
             i++;
         }
@@ -430,6 +435,7 @@ int main(){
         while(i < 200){
             x_value = (float(i)-0.5) * delta_x;
             error_array[i] = sqrt(data_array_x[i]);
+            //std::cout << "x " << data_array_x[i] << "\n";
             x_histFile << x_value << " " << data_array_x[i] << " " << error_array[i] << "\n";
             i++;
         }
@@ -442,25 +448,30 @@ int main(){
         while(i < 200){
             x_value = (float(i) - 0.5) * delta_t;
             error_array[i] = sqrt(data_array_t[i]);
+            //std::cout << "t " << data_array_t[i] << "\n";
             t_histFile << x_value << " " << data_array_t[i] << " " << error_array[i] << "\n";
             i++;
         }
         t_histFile.close();
     }
+
     if(hist_phi_JT){
+        i = 0;
         std::ofstream phi_JT_histFile;
         phi_JT_histFile.open("lepton_phi_JT.txt");
         while(i < 200){
-            x_value = (float(i) - 0.5)*delta_phi;
+            x_value = (float(i) - 0.5) * delta_phi;
             error_array[i] = sqrt(data_array_phi_JT[i]);
+            //std::cout << "phi_JT " << data_array_phi_JT[i] << "\n";
             phi_JT_histFile << x_value << " " << data_array_phi_JT[i] << " " << error_array[i] << "\n";
             i++;
         }
         phi_JT_histFile.close();
     }
-    if(hist_nonlinear_t){
+    if(hist_nonlinear_t == true){
+        i = 0;
         std::ofstream nonlinear_t_histFile;
-        nonlinear_t_histFile.open("lepton_nonlinear_.txt");
+        nonlinear_t_histFile.open("lepton_nonlinear_t.txt");
         while(i < 200){
             x_value_lo = pow((alpha_t * (1 - gamma_t) * float(i-1) + pow(beta_t, 1 - gamma_t)), 1/(1-gamma_t)) - beta_t;
             x_value = pow((alpha_t * (1 - gamma_t) * float(i - 0.5) + pow(beta_t, 1 - gamma_t)), 1/(1-gamma_t)) - beta_t;
@@ -469,29 +480,35 @@ int main(){
             delta_x_value = bin_width/2;
             error_array[i] = sqrt(data_array_nonlinear_t[i])/bin_width;
             data_array_nonlinear_t[i] = data_array_nonlinear_t[i]/bin_width;
+            //std::cout << "nonlin t " << data_array_nonlinear_t[i] << "\n";
             nonlinear_t_histFile << x_value << " " << delta_x_value << " "<< data_array_nonlinear_t[i] << " " << error_array[i] << "\n";
             i++;
         }
         nonlinear_t_histFile.close();
     }
-    if(hist_Egamma){
+    if(hist_Egamma == true){
+        i = 0;
         std::ofstream Egamma_histFile;
         Egamma_histFile.open("lepton_Egamma.txt");
         while(i < 200){
             x_value = E_lo + (float(i) - 0.5) * delta_Egamma;
             error_array[i] = sqrt(data_array_Egamma[i]);
+            //std::cout << "Egamma " << data_array_Egamma[i] << "\n";
             Egamma_histFile << x_value << " " << data_array_Egamma[i] << " " << error_array[i] << "\n";
             i++;
         }
         Egamma_histFile.close();
     }
-    if(hist_cos){
+    if(hist_cos == true){
+        i = 0;
         std::ofstream cos_histFile;
         cos_histFile.open("lepton_cos.txt");
         while(i < 200){
             x_value = cos_max - (float(i) - 0.5) * delta_cos;
             error_array[i] = sqrt(data_array_cos[i]);
+            //std::cout << "cos " << data_array_cos[i] << "\n";
             cos_histFile << x_value << " " << data_array_cos[i] << " " << error_array[i];
+            i++;
         }
         cos_histFile.close();
     }
@@ -545,7 +562,7 @@ double Brem(bool brem_init, bool cobrems, double E0, double Egamma){
 // multiplied by 2.  You can see this by comparing Wp in Eqn. 22 with the vector current part of Eqn. 23
 //
 // --------------------------------------------
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF)//units of nb/sr^2;
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double* phi_JT)//units of nb/sr^2;
 {
 //implicit none
   double Z, W_unpol, W_pol, q2_T;
@@ -600,8 +617,8 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     }
 
 
-    phi_JT = acos(JT[0]/sqrt(pow(JT[0],2) + pow(JT[1], 2)));//phi angle of JT wrt to x axis, radians
-    if (JT[1] < 0) phi_JT = 2*m_pi - phi_JT;
+    *phi_JT = acos(JT[0]/sqrt(pow(JT[0],2) + pow(JT[1], 2)));//phi angle of JT wrt to x axis, radians
+    if (JT[1] < 0) *phi_JT = 2 * m_pi - *phi_JT;
     //std::cout << "phi_JT " << phi_JT <<"\n";
 //
     W_unpol = pow(m_part,2) * pow(JS,2) + (pow(x,2) + pow((1 -x),2)) * (pow(JT[1],2) + pow(JT[2], 2));
@@ -611,7 +628,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
 //     &	*hbarc**2/100.*1.e9*FF2(q2_T,ztgt,nuc_FF) !units of nb/sr^2  The denominator uses the transverse 3-momentum transfer^2, 
     W_pol = -2 * x * (1 - x) * (pow(JT[1], 2) + pow(JT[2], 2));//this is my reduction of the Bakmaev equations;
     //std::cout << "W_pol " << W_pol <<"\n";
-    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(m_pi,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
+    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(m_pi,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * *phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
     //std::cout << xsctnOut << "\n";
 //this contains the cos(2phi_JT) term*hbarc**2/100.*1.e9*FF2(q2_T, ztgt, nuc_FF) //units of nb/sr^2 The denominator uses the transverse 3 - momentum transfer^2
 //
@@ -654,10 +671,10 @@ double FF2(double q2, int ztgt, bool nuc_FF)
 //****************************************************************************************
 //
 // --------------------------------------------
-double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double w_mumu, double t, double missing_mass, double m_part, bool pion_hypothesis)
+double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t)
 {
     // implicit none
-  double E1, E2, ks[3], m_x, analysisOut;
+    double E1, E2, ks[3], m_x, analysisOut;
     double mass_pi = 0.139570;
     E1 = sqrt(pow(k1[0], 2) + pow(k1[1], 2) + pow(k1[2], 2) + pow(m_part, 2));//lepton energies
     E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_part, 2));
@@ -668,7 +685,7 @@ double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[
     ktgt[1] = -ks[1];
     ktgt[2] = E0 - ks[2];
     missing_mass = sqrt(pow((E0 + mtgt - E1 - E2), 2) - pow(ktgt[0], 2) - pow(ktgt[1],2) - pow(ktgt[2], 2));
-    t = pow(ks[0], 2) + pow(ks[1], 2) + pow((E0 - ks[2]), 2) - pow((E0 - E1 - E2), 2);//4 - momentum transfer squared to nucleus, this is positive;
+    *t = pow(ks[0], 2) + pow(ks[1], 2) + pow((E0 - ks[2]), 2) - pow((E0 - E1 - E2), 2);//4 - momentum transfer squared to nucleus, this is positive;
     //
     //		mu mu invariant mass, possibly with pion hypothesis
     m_x = m_part;
@@ -677,8 +694,7 @@ double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[
     }
     E1 = sqrt(pow(k1[0], 2) + pow(k1[1],2) + pow(k1[2], 2) + pow(m_x, 2));//need to put in the mass hypothesis
     E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_x, 2));
-    w_mumu = sqrt(pow(E1 + E2, 2) - pow(ks[0], 2) - pow(ks[1], 2) - pow(ks[2],2));
-    return analysisOut;
+    *w_mumu = sqrt(pow(E1 + E2, 2) - pow(ks[0], 2) - pow(ks[1], 2) - pow(ks[2],2));
 }
 
 
