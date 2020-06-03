@@ -19,9 +19,9 @@ struct density_rho0 density_rho0;
 struct Brem_spect brem_spect;
 
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma);
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double* phi_JT);//units of nb/sr^2
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double* phi_JT, double* k10, double* k11, double* k12, double* k20, double* k21, double* k22);//units of nb/sr^2
 double FF2(double q2, int ztgt, bool nuc_FF);
-double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t);
+double analysis(double E0, double mtgt, double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t, double k10in, double k11in, double k12in, double k20in, double k21in, double k22in);
 void density_init(int ztgt);
 double FF(double Q2, int ztgt);
 
@@ -52,23 +52,23 @@ double FF(double Q2, int ztgt);
 //
 //
 double E0, theta_min, theta_max;
-double delta_cos, delta_x_value, bin_width, x_value_hi, x_value_lo, total_xscn_old, delta_total_xscn, pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, k1[3], k2[3], m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, m_pi, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma, data_array_w[200], data_array_x[200], data_array_t[200], data_array_phi_JT[200], data_array_nonlinear_t[200], data_array_Egamma[200], data_array_cos[200], cross_max_old, delta_cross_max;
+double mass_pi, delta_cos, delta_x_value, bin_width, x_value_hi, x_value_lo, total_xscn_old, delta_total_xscn, pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma, data_array_w[200], data_array_x[200], data_array_t[200], data_array_phi_JT[200], data_array_nonlinear_t[200], data_array_Egamma[200], data_array_cos[200], cross_max_old, delta_cross_max, k10, k11, k12, k20, k21, k22, k10in, k11in, k12in, k20in, k21in, k22in;
 int iseed;
 int i, itest[4], nevent, j, nfail, bad_max, j_array, ztgt, phase_space; 
 bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_nonlinear_t, muon, electron, pion_hypothesis, brem_init, cobrems, hist_cos, integral_xsctn, w_cut, nuc_FF, verbose_output;
-float xi_array, ti_array, wi_array, phi_JTi_array, cos_maxi_array, nonlinear_ti_array, Egammai_array;
+int xi_array, ti_array, wi_array, phi_JTi_array, cos_maxi_array, nonlinear_ti_array, Egammai_array;
 //	Standard CPP configuration 
 //	double ztgt = 82, E0 = 5.5, pol = 1.0, theta_min = 0.80,theta_max = 5.3; //Standard CPP configuration, min angle to TOF and max angle to MWPC
 //
 //	Standard GlueX configuration
 //	data ztgt,E0,E_coherent,pol,theta_min,theta_max /1,11.0,8.7,1.0,0.90,13.12/	//standard GlueX config., min and max angles in deg. to TOF
 int main(){
-    ztgt = 1, E0 = 11.0, E_coherent = 8.7, pol = 1.0, theta_min = 0.090, theta_max = 13.12;///standard GlueX config., min and max angles in deg. to TOF;
+    ztgt = 1, E0 = 11.0, E_coherent = 8.7, pol = 1.0, theta_min = 0.75, theta_max = 13.12;///standard GlueX config., min and max angles in deg. to TOF;
 //	Set tagging interval
     double w_min = 0.25, w_max = 0.621;
     E_hi = 8.8, E_lo = 8.6;
-    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 200;
-    m_e = 0.000511, m_muon = 0.105658, m_pi = 0.139570, hbarc = 0.197;
+    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 1000;
+    m_e = 0.000511, m_muon = 0.105658, mass_pi = 0.139570, hbarc = 0.197;
 //	
 //  Histogram parameters
     delta_w = 0.02, delta_t = 0.0002, delta_x = 0.02, delta_phi = 5.0, frac_delta_t = 0.2, delta_Egamma = 0.05, delta_cos = 0.0001; //units of GeV, GeV^2, //DIMENSIONless, degrees,
@@ -124,12 +124,12 @@ int main(){
 //Can turn on any or all of these logicals.
 
     hist_w = true;
-    hist_x = true;
-    hist_t = true;
-    hist_phi_JT = true;
-    hist_nonlinear_t = true;
-    hist_Egamma = true;
-    hist_cos = true;
+    hist_x = false;
+    hist_t = false;
+    hist_phi_JT = false;
+    hist_nonlinear_t = false;
+    hist_Egamma = false;
+    hist_cos = false;
     output_event = true;     //for writing event file
     integral_xsctn = true;  //set true for outputting integrated cross sections
     w_cut = false;           //set true for applying w cuts to the data
@@ -166,18 +166,18 @@ int main(){
 
 //	Evaluate the cross section at one kinematic point at coherent peak
     x = 0.4;
-    theta1 = theta_min * (m_pi/180);
-    theta2 = theta_min * (m_pi/180);
-    phi1 = 90 * (m_pi/180);
-    phi2 = 270 * (m_pi/180);
-    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT);
+    theta1 = theta_min * (M_PI/180);
+    theta2 = theta_min * (M_PI/180);
+    phi1 = 90 * (M_PI/180);
+    phi2 = 270 * (M_PI/180);
+    cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT, &k10, &k11, &k12, &k20, &k21, &k22);
     if(verbose_output == true){
         std::cout << E_coherent << " " << ztgt << " " << x << " " << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << " " << pol << " " << m_part << " " << nuc_FF << " " << "\n";
         std::cout << " cross section nb/sr^2 = " << cross_section << "\n";
     }
 //*************************************
-    theta_min = theta_min * m_pi/180;//switch to radians;
-    theta_max = theta_max * m_pi/180;
+    theta_min = theta_min * M_PI/180;//switch to radians;
+    theta_max = theta_max * M_PI/180;
     cos_max = cos(theta_min);
     cos_min = cos(theta_max);
 // Limits on xs
@@ -200,28 +200,29 @@ int main(){
         while(i < itest[j]){//find maximum cross section in allowed phase space
             Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
             x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
-            phi1 = 90 * m_pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
-            phi2 = 270 * m_pi/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
+            phi1 = 90 * M_PI/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
+            phi2 = 270 * M_PI/180;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
+            xs1 = RandomReal(xs_min, xs_max);
             xs2 = RandomReal(xs_min, xs_max);
+            //std::cout << xs1 << " " << xs2 << "\n";
             if (phase_space == 0) {// dcos theta/dx = 1
-                theta1 = theta_min;//make a guess for theta1
+                theta1 = acos(xs1);//make a guess for theta1
                 theta2 = acos(xs2);
                 jacobian = 1;
             }else{
-                theta1 = theta_min;//make a guess for theta1
-                xs1 = pow(theta_min, (1/Rexp));
+                theta1 = pow(xs1, phase_space);//make a guess for theta1
                 theta2 = pow(xs2, phase_space);
                 jacobian = (Rexp * pow(xs1, (phase_space - 1)) * sin(pow(xs1, phase_space))) * (Rexp * pow(xs2,(phase_space - 1)) * sin(pow(xs2,phase_space)));
             }
-            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
+            cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT, &k10, &k11, &k12, &k20, &k21, &k22)*jacobian*Brem(brem_init, cobrems, E0, Egamma);
             if(cross_section > cross_max){
                 cross_max = cross_section;
                 Egamma_max = Egamma;
                 xmax = x;
-                theta1_max = theta1 * 180/m_pi;
-                theta2_max = theta2 * 180/m_pi;
-                phi1_max = phi1 * 180/m_pi;
-                phi2_max = phi2 * 180/m_pi;
+                theta1_max = theta1 * 180/M_PI;
+                theta2_max = theta2 * 180/M_PI;
+                phi1_max = phi1 * 180/M_PI;
+                phi2_max = phi2 * 180/M_PI;
             
             }
             i++;
@@ -249,8 +250,8 @@ int main(){
 	    i = 0;
             while(i < itest[j]){
                 x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
-                phi1 = 2*m_pi * RandomReal(zlo, zhi);
-                phi2 = 2*m_pi * RandomReal(zlo, zhi);
+                phi1 = 2*M_PI * RandomReal(zlo, zhi);
+                phi2 = 2*M_PI * RandomReal(zlo, zhi);
                 xs1 = RandomReal(xs_min, xs_max);
                 xs2 = RandomReal(xs_min, xs_max);
                 if (phase_space == 0){// dcos theta/dx = 1
@@ -262,13 +263,19 @@ int main(){
                     theta2 = pow(xs2,phase_space);
                     jacobian = (Rexp * pow(xs1,(phase_space - 1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1))*sin(pow(xs2,phase_space)));
                 }
-                cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT)*jacobian;
-                analysis(Egamma, mtgt, k1, k2, ktgt, missing_mass, m_e ,pion_hypothesis , &w_mumu, &t);
+                cross_section = xsctn(E_coherent, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT, &k10, &k11, &k12, &k20, &k21, &k22)*jacobian;
+                k10in = k10;
+                k11in = k11;
+                k12in = k12;
+                k20in = k20;
+                k21in = k21;
+                k22in = k22;
+                analysis(Egamma, mtgt, missing_mass, m_e, pion_hypothesis , &w_mumu, &t, k10in, k11in, k12in, k20in, k21in, k22in);
                 cross_sum = cross_sum + cross_section;
             i++;
             std::cout << i << "\n";
 	    }
-        total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*m_pi), 2) * (x_max - x_min);
+        total_xscn = cross_sum/float(itest[j])*pow((xs_max - xs_min), 2)*pow((2*M_PI), 2) * (x_max - x_min);
         delta_total_xscn = (total_xscn-total_xscn_old)/total_xscn*100;
         std::cout << "test events " << itest[j] << " Egamma " <<  E_coherent << " total cross section nb " <<  total_xscn << "\n";
         j++;
@@ -284,20 +291,19 @@ int main(){
 //Use the widest possible range in x by using the maximum accepted tagged photon energy, then test it
     x_max = (E_hi - m_part)/E_hi;//largest possible x
     x_min = m_part/E_hi;//smallest possible x
-    //
     nfail = 0;
     bad_max = 0;
     i = 0;
-    //
     while(i < nevent){
       std::cout << "nevent: " << i << "\n";
+
     g100:
         Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
         x = RandomReal(x_min, x_max);//energy fraction
   //	Test x to make sure it's within the allowed range for the photon energy Egamma
         if((x >= ((Egamma - m_part)/Egamma)) || (x <= (m_part/Egamma))) goto g100; // x is out of range, try again
-        phi1 = 2 * m_pi * RandomReal(zlo, zhi);
-        phi2 = 2 * m_pi * RandomReal(zlo, zhi);
+        phi1 = 2 * M_PI * RandomReal(zlo, zhi);
+        phi2 = 2 * M_PI * RandomReal(zlo, zhi);
         xs1 = RandomReal(xs_min, xs_max);
         xs2 = RandomReal(xs_min, xs_max);
         if(phase_space == 0){// dcos theta/dx = 1
@@ -310,7 +316,7 @@ int main(){
             jacobian = (Rexp * pow(xs1,(phase_space-1)) * sin(pow(xs1,phase_space))) * (Rexp*pow(xs2,(phase_space-1)) * sin(pow(xs2,phase_space)));
         }
 
-        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT) * jacobian * Brem(brem_init, cobrems, E0, Egamma);
+        cross_section = xsctn(Egamma, ztgt, x, theta1, phi1, theta2, phi2, pol, m_part, nuc_FF, &phi_JT, &k10, &k11, &k12, &k20, &k21, &k22) * jacobian * Brem(brem_init, cobrems, E0, Egamma);
         if (cross_section > cross_max){
             bad_max = bad_max + 1;//an occurrence of cross section larger than cross_max, not supposed to happen
             std::cout <<  "bad max cross section= " <<  cross_section << "\n";
@@ -320,22 +326,34 @@ int main(){
             nfail = nfail + 1;
             goto g100;
         }
-        analysis(Egamma, mtgt, k1, k2, ktgt, missing_mass, m_part, pion_hypothesis, &w_mumu, &t);//analyze the event;
+        k10in = k10;
+        k11in = k11;
+        k12in = k12;
+        k20in = k20;
+        k21in = k21;
+        k22in = k22;
+
+        analysis(Egamma, mtgt, missing_mass, m_part, pion_hypothesis, &w_mumu, &t, k10in, k11in, k12in, k20in, k21in, k22in);//analyze the event;
         
-        if(w_cut && (w_mumu < w_min || w_mumu > w_max)) goto g100;
+        if(w_cut && (w_mumu < w_min || w_mumu > w_max)){
+            goto g100;
+        }
 
 //  
 //  ******************************Event selection succeeds:*********************************************
 //		Do all the histogramming
 //      
-        wi_array = w_mumu/delta_w;//w distribution;
+        wi_array = int(w_mumu/delta_w) + 1;//w distribution;
+        //std::cout << "w_mumu " << w_mumu << "\n";
+        //std::cout << "delta_w " << delta_w << "\n";
+        std::cout << "wi_array " << wi_array << "\n";
         if(wi_array < 0){
             wi_array = 0;
         }
         if(wi_array > 200){
             wi_array = 200;
         }
-        data_array_w[i] = wi_array;
+        data_array_w[wi_array] = data_array[wi_array] + 1; 
         //data_array_w[i_array] = data_array_w[i_array] + 1;
 
         xi_array = x/delta_x; //x distribution
@@ -358,7 +376,7 @@ int main(){
         //data_array_t[i_array] = data_array_t[i_array] + 1;
         data_array_t[i] = ti_array;
 
-        phi_JTi_array = int(phi_JT*180/m_pi/delta_phi); //JT phi distribution in degrees;
+        phi_JTi_array = int(phi_JT*180/M_PI/delta_phi); //JT phi distribution in degrees;
         if(phi_JTi_array < 0){
             phi_JTi_array = 0;
         }
@@ -373,7 +391,7 @@ int main(){
             nonlinear_ti_array = 0;
         }
         if(nonlinear_ti_array > 200){
-            nonlinear_ti_array =200;
+            nonlinear_ti_array = 200;
         }	
 	    //data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
         data_array_nonlinear_t[i] = nonlinear_ti_array;
@@ -383,7 +401,7 @@ int main(){
             Egammai_array = 0;
         }
         if(Egammai_array > 200){
-            Egammai_array =200;
+            Egammai_array = 200;
         }
         //data_array_Egamma[i_array] = data_array_Egamma[i_array] + 1;
         data_array_Egamma[i] = Egammai_array;
@@ -393,7 +411,7 @@ int main(){
             cos_maxi_array = 0;
         }
         if(cos_maxi_array > 200){
-            cos_maxi_array =200;
+            cos_maxi_array = 200;
         }
         //data_array_cos[i_array] = data_array_cos[i_array] + 1;
         data_array_cos[i] = cos_maxi_array;
@@ -401,10 +419,10 @@ int main(){
         if(output_event){
             std::ofstream outputFile;
             outputFile.open("lepton_v17_4_event.txt");
-            outputFile << Egamma << " " << k1[0] << " " << k1[1] << " " << k1[2] << " " << k2[0] << " " << k2[1] << " " << k2[2] << " " << ktgt[0] << " " << ktgt[1]<< " " << ktgt[2] << " " << "\n";
+            outputFile << Egamma << " " << k10 << " " << k11 << " " << k12 << " " << k20 << " " << k21 << " " << k22 << " " << "\n"; //<< ktgt[0] << " " << ktgt[1]<< " " << ktgt[2] << " " << "\n";
         }
         if(verbose_output && i % 50 == 0){
-            std::cout << " event # " << i;
+            std::cout << " event # " << i << "\n";
         }
         i++;
     }
@@ -512,6 +530,7 @@ int main(){
         }
         cos_histFile.close();
     }
+    return 0;
 }
 
 
@@ -562,7 +581,7 @@ double Brem(bool brem_init, bool cobrems, double E0, double Egamma){
 // multiplied by 2.  You can see this by comparing Wp in Eqn. 22 with the vector current part of Eqn. 23
 //
 // --------------------------------------------
-double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double* phi_JT)//units of nb/sr^2;
+double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double theta2, double phi2, double pol, double m_part, bool nuc_FF, double* phi_JT, double* k10, double* k11, double* k12, double* k20, double* k21, double* k22)//units of nb/sr^2;
 {
 //implicit none
   double Z, W_unpol, W_pol, q2_T;
@@ -579,28 +598,23 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     E2 = E0 * (1 - x);
     k1_mag = sqrt(pow(E1, 2) - pow(m_part, 2));
     k2_mag = sqrt(pow(E2, 2) - pow(m_part, 2));
-    //std::cout << "k1_mag " << k1_mag <<"\n";
-    //std::cout << "k2_mag " << k2_mag <<"\n";
-    k1[0] = k1_mag * sin(theta1) * cos(phi1);
-    k1[1] = k1_mag * sin(theta1) * sin(phi1);
-    k1[2] = k1_mag * cos(theta1);
-    //std::cout << "k1[0] " << k1[0] <<"\n";
-    //std::cout << "k1[1] " << k1[1] <<"\n";
-    //std::cout << "k1[2] " << k1[2] <<"\n";
-    k2[0] = k2_mag * sin(theta2) * cos(phi2);
-    k2[1] = k2_mag * sin(theta2) * sin(phi2);
-    k2[2] = k2_mag * cos(theta2);
-    //std::cout << "k2[0] " << k2[0] <<"\n";
-    //std::cout << "k2[1] " << k2[1] <<"\n";
-    //std::cout << "k2[2] " << k2[2] <<"\n";
-    //
-    p1 = sqrt(pow(k1[0], 2) + pow(k1[1],2));//transverse momenta of muon #1, GeV
+    //std::cout << "k1_mag " << k1_mag << " k2_mag " << k2_mag << "\n";
+    *k10 = k1_mag * sin(theta1) * cos(phi1);
+    *k11 = k1_mag * sin(theta1) * sin(phi1);
+    *k12 = k1_mag * cos(theta1);
+    //std::cout << "xsctn k1[0] " << *k10 << " xsctn k1[1] " << *k11 << " xsctn k1[2] " << *k12 <<"\n";
+    *k20 = k2_mag * sin(theta2) * cos(phi2);
+    *k21 = k2_mag * sin(theta2) * sin(phi2);
+    *k22 = k2_mag * cos(theta2);
+    //std::cout << "xsctn k2[0] " << *k20 << " xsctn k2[1] " << *k21 << " xsctn k2[2] " << *k22 <<"\n";
+
+    p1 = sqrt(pow(*k11, 2) + pow(*k11,2));//transverse momenta of muon #1, GeV
     //std::cout << "p1 " << p1 <<"\n";
-    p2 = sqrt(pow(k2[0], 2) + pow(k2[1],2));//transverse momenta of muon #2, GeV
+    p2 = sqrt(pow(*k20, 2) + pow(*k21,2));//transverse momenta of muon #2, GeV
     //std::cout << "p2 " << p2 <<"\n";
-    q2_T = pow((k1[0] + k2[0]),2) + pow((k1[1] + k2[1]),2); // this is transverse momentum transfer squared
+    q2_T = pow((*k10 + *k20),2) + pow((*k11 + *k21),2); // this is transverse momentum transfer squared
     //std::cout << "q2_T " << q2_T <<"\n";
-    q2 = q2_T + pow((E0 - k1[2] - k2[2]), 2); // this is 3 - momentum transfer squared
+    q2 = q2_T + pow((E0 - *k12 - *k22), 2); // this is 3 - momentum transfer squared
     //std::cout << "q2 " << q2 <<"\n";
     c1 = pow(p1, 2) + pow(m_part, 2);
     //std::cout << "c1 " << c1 <<"\n";
@@ -609,16 +623,13 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     JS = 1/c1 - 1/c2;//units of 1/GeV^2//scalar current, units of GeV^ - 2;
     //std::cout << "JS " << JS <<"\n";
     i = 0;
-    while(i < 2){
-      JT[i] = k1[i]/c1 + k2[i]/c2;//vector current, units of GeV^ - 1;
-      //std::cout << "JT[i] " << JT[i] <<"\n";
-      i++;
-      
-    }
+    JT[0] = *k10/c1 + *k20/c2;//vector current, units of GeV^ - 1;
+    JT[1] = *k11/c1 + *k21/c2;
+    JT[2] = *k12/c1 + *k22/c2;
 
 
     *phi_JT = acos(JT[0]/sqrt(pow(JT[0],2) + pow(JT[1], 2)));//phi angle of JT wrt to x axis, radians
-    if (JT[1] < 0) *phi_JT = 2 * m_pi - *phi_JT;
+    if (JT[1] < 0) *phi_JT = 2 * M_PI - *phi_JT;
     //std::cout << "phi_JT " << phi_JT <<"\n";
 //
     W_unpol = pow(m_part,2) * pow(JS,2) + (pow(x,2) + pow((1 -x),2)) * (pow(JT[1],2) + pow(JT[2], 2));
@@ -628,7 +639,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
 //     &	*hbarc**2/100.*1.e9*FF2(q2_T,ztgt,nuc_FF) !units of nb/sr^2  The denominator uses the transverse 3-momentum transfer^2, 
     W_pol = -2 * x * (1 - x) * (pow(JT[1], 2) + pow(JT[2], 2));//this is my reduction of the Bakmaev equations;
     //std::cout << "W_pol " << W_pol <<"\n";
-    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(m_pi,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * *phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
+    xsctnOut = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(M_PI,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * *phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9 * FF2(q2_T, ztgt, nuc_FF);
     //std::cout << xsctnOut << "\n";
 //this contains the cos(2phi_JT) term*hbarc**2/100.*1.e9*FF2(q2_T, ztgt, nuc_FF) //units of nb/sr^2 The denominator uses the transverse 3 - momentum transfer^2
 //
@@ -671,16 +682,22 @@ double FF2(double q2, int ztgt, bool nuc_FF)
 //****************************************************************************************
 //
 // --------------------------------------------
-double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[3], double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t)
+double analysis(double E0, double mtgt, double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t, double k10in, double k11in, double k12in, double k20in, double k21in, double k22in)
 {
     // implicit none
-    double E1, E2, ks[3], m_x, analysisOut;
+    double E1, E2, ks[3], m_x, analysisOut, ktgt[3];
     double mass_pi = 0.139570;
-    E1 = sqrt(pow(k1[0], 2) + pow(k1[1], 2) + pow(k1[2], 2) + pow(m_part, 2));//lepton energies
-    E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_part, 2));
-    ks[0] = k1[0] + k2[0];//lepton summed momentum
-    ks[1] = k1[1] + k2[1];
-    ks[2] = k1[2] + k2[2];
+    //std::cout << "analysis k1[0] " << k10in <<"\n";
+    //std::cout << "analysis k1[1] " << k11in <<"\n";
+    //std::cout << "analysis k1[2] " << k12in <<"\n";
+    //std::cout << "analysis k2[0] " << k20in <<"\n";
+    //std::cout << "analysis k2[1] " << k21in <<"\n";
+    //std::cout << "analysis k2[2] " << k22in <<"\n";
+    E1 = sqrt(pow(k10in, 2) + pow(k11in, 2) + pow(k12in, 2) + pow(m_part, 2));//lepton energies
+    E2 = sqrt(pow(k20in, 2) + pow(k21in, 2) + pow(k22in, 2) + pow(m_part, 2));
+    ks[0] = k10in + k20in;//lepton summed momentum
+    ks[1] = k11in + k21in;
+    ks[2] = k12in + k22in;
     ktgt[0] = -ks[0];//target momentum;
     ktgt[1] = -ks[1];
     ktgt[2] = E0 - ks[2];
@@ -692,9 +709,10 @@ double analysis(double E0, double mtgt, double k1[3], double k2[3], double ktgt[
     if (pion_hypothesis){
         m_x = mass_pi;
     }
-    E1 = sqrt(pow(k1[0], 2) + pow(k1[1],2) + pow(k1[2], 2) + pow(m_x, 2));//need to put in the mass hypothesis
-    E2 = sqrt(pow(k2[0], 2) + pow(k2[1], 2) + pow(k2[2], 2) + pow(m_x, 2));
-    *w_mumu = sqrt(pow(E1 + E2, 2) - pow(ks[0], 2) - pow(ks[1], 2) - pow(ks[2],2));
+    E1 = sqrt(pow(k10in, 2) + pow(k11in,2) + pow(k12in, 2) + pow(m_x, 2));//need to put in the mass hypothesis
+    E2 = sqrt(pow(k20in, 2) + pow(k21in, 2) + pow(k22in, 2) + pow(m_x, 2));
+    //std::cout << "E1 " << E1 << " E2 " << E2 <<  " ks[0] " << ks[0] << " ks[1] " << ks[1] << " ks[2] "<< ks[2] << "\n";
+    *w_mumu = sqrt(pow((E1 + E2), 2) - pow(ks[0], 2) - pow(ks[1], 2) - pow(ks[2],2));
 }
 
 
@@ -715,10 +733,10 @@ void density_init(int ztgt)
     rho0 = 0;
     if((ztgt == 82) || (ztgt == 1)) return;
     //c	These equations have to do with Fermi distribution, reference? 
-    w = 4 * m_pi * c_den[ztgt]/3 * (pow((m_pi * a_den[ztgt]), 2) + pow(c_den[ztgt], 2));
+    w = 4 * M_PI * c_den[ztgt]/3 * (pow((M_PI * a_den[ztgt]), 2) + pow(c_den[ztgt], 2));
     i = 0;
     while(i < 10){
-        w = w + 8 * m_pi * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * exp(-float(i)*c_den[ztgt]/a_den[ztgt])/pow(float(i), 3);
+        w = w + 8 * M_PI * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * exp(-float(i)*c_den[ztgt]/a_den[ztgt])/pow(float(i), 3);
         i++;
     }
     density_rho0.rho0 = 1/w;
@@ -769,10 +787,10 @@ double FF(double Q2, int ztgt)
 	    i++;
         }while(i < 12);
     }else{ //for everything else use 2 - parameter fermi model, reference ?
-      returnFF = 4 * pow(m_pi,2) * rho0 * pow(a_den[ztgt], 3)/(pow((Q * a_den[ztgt]), 2) * pow((sinh(m_pi * Q * a_den[ztgt])),2)) * (m_pi * Q * a_den[ztgt] * cosh(m_pi * Q * a_den[ztgt]) * sin(Q * c_den[ztgt]) - Q * c_den[ztgt] * cos(Q * c_den[ztgt]) * sinh(m_pi * Q * a_den[ztgt]));
+      returnFF = 4 * pow(M_PI,2) * rho0 * pow(a_den[ztgt], 3)/(pow((Q * a_den[ztgt]), 2) * pow((sinh(M_PI * Q * a_den[ztgt])),2)) * (M_PI * Q * a_den[ztgt] * cosh(M_PI * Q * a_den[ztgt]) * sin(Q * c_den[ztgt]) - Q * c_den[ztgt] * cos(Q * c_den[ztgt]) * sinh(M_PI * Q * a_den[ztgt]));
       i = 0;
       do{
-	    returnFF = returnFF + 8 * m_pi * rho0 * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * float(i) * exp(-float(i) * c_den[ztgt]/a_den[ztgt])/pow((pow(float(i), 2) + pow((Q * a_den[ztgt]),2)),2);
+	    returnFF = returnFF + 8 * M_PI * rho0 * pow(a_den[ztgt], 3) * pow((-1), (i - 1)) * float(i) * exp(-float(i) * c_den[ztgt]/a_den[ztgt])/pow((pow(float(i), 2) + pow((Q * a_den[ztgt]),2)),2);
 	    i++;
       }while(i < 10);
     }
