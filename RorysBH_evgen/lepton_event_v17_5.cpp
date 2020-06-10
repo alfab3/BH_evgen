@@ -1,4 +1,4 @@
-//Date: 6/9/2020 8:52 PM
+//Date: 6/10/2020 12:06 PM
 //	To compile: "g++ lepton_event_v17_5.cpp -lgsl -lgslcblas”
 //	To run: “./a.out”
 #include <stdio.h>
@@ -41,7 +41,6 @@ double FF2(double q2, int ztgt, bool nuc_FF);
 double analysis(double E0, double mtgt, double missing_mass, double m_part, bool pion_hypothesis, double* w_mumu, double* t, double k10in, double k11in, double k12in, double k20in, double k21in, double k22in);
 double density_init(int ztgt);
 double FF(double Q2, int ztgt);
-double RandomReal(double LowerLimit, double UpperLimit);
 void    ZBQLINI(int seed, double ZBQLIX[43+1], double *bb);
 double  ZBQLUAB(double x1, double x2);
 double  ZBQLU01();
@@ -49,10 +48,10 @@ double  ZBQLU01();
 
 
 double E0, theta_min, theta_max;
-double raddeg, degrad, bremMain, zlo, zhi, w_min, w_max, mass_pi, delta_cos, delta_x_value, bin_width, x_value_hi, x_value_lo, total_xscn_old, delta_total_xscn, pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma, data_array_w[200], data_array_x[200], data_array_t[200], data_array_phi_JT[200], data_array_nonlinear_t[200], data_array_Egamma[200], data_array_cos[200], cross_max_old, delta_cross_max, k10, k11, k12, k20, k21, k22, k10in, k11in, k12in, k20in, k21in, k22in;
+double raddeg, degrad, bremMain, zlo, zhi, w_min, w_max, mass_pi, delta_cos, delta_x_value, bin_width, x_value_hi, x_value_lo, total_xscn_old, delta_total_xscn, pi, cos_max, cos_min, cross_sum, cross_max, cross_test, x_min, x_max, theta1, phi1, costheta1, theta2, phi2, costheta2, cross_section, total_xscn, m_e, m_part, m_muon, pol, x, q2, failure, w_mumu, xs1, xs2, xs_max, xs_min, Atgt[100], tgtlen[100], radlen[100], hbarc, W, jacobian, phi_JT, delta_w, delta_x, delta_phi, mtgt, ktgt[3], Elab[2], missing_mass, t, delta_t, x_value, q2_T, W_pol, W_unpol, JS, JT[2], Rexp, xmax, theta1_max, theta2_max, phi1_max, phi2_max, temp, delta_log_t, frac_delta_t, delta_Egamma, data_array[200], error_array[200], Egamma_max, E_hi, E_lo, E_coherent, Egamma, data_array_w[200], data_array_x[200], data_array_t[200], data_array_phi_JT[200], data_array_nonlinear_t[200], data_array_Egamma[200], data_array_cos[200], data_array_log_t[200], cross_max_old, delta_cross_max, k10, k11, k12, k20, k21, k22, k10in, k11in, k12in, k20in, k21in, k22in;
 int iseed, i_array, imax;
 int i, itest[4], nevent, j, nfail, bad_max, j_array, ztgt, phase_space, ipoint; 
-bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_nonlinear_t, muon, electron, pion_hypothesis, brem_init, cobrems, hist_cos, integral_xsctn, w_cut, nuc_FF, verbose_output;
+bool hist_w, hist_x, hist_t, hist_phi_JT, hist_Egamma, output_event, hist_nonlinear_t, hist_log_t, muon, electron, pion_hypothesis, brem_init, cobrems, hist_cos, integral_xsctn, w_cut, nuc_FF, verbose_output;
 int main(){
     //Standard CPP configuration 
     //ztgt = 82, E0 = 5.5, pol = 1.0, theta_min = 0.80,theta_max = 5.3; //Standard CPP configuration, min angle to TOF and max angle to MWPC
@@ -62,7 +61,7 @@ int main(){
     w_min = 0.25, w_max = 0.621;
     //Set tagging interval
     E_hi = 8.8, E_lo = 8.6;
-    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 10000;
+    itest[0] = 100000, itest[1] = 1000000, itest[2] = 10000000, itest[3] = 100000000, nevent = 1000000;
     m_e = 0.000511, m_muon = 0.105658, mass_pi = 0.139570, hbarc = 0.197;
 
     //Histogram parameters
@@ -115,9 +114,10 @@ int main(){
     hist_x = true;
     hist_t = true;
     hist_phi_JT = true;
-    hist_nonlinear_t = true;
-    hist_Egamma = true;
-    hist_cos = true;
+    hist_nonlinear_t = false; //not currently operational
+    hist_log_t = true;
+    hist_Egamma = false; 
+    hist_cos = false;
     output_event = true;     //for writing event file
     integral_xsctn = true;  //set true for outputting integrated cross sections
     w_cut = false;           //set true for applying w cuts to the data
@@ -195,16 +195,16 @@ int main(){
 //
     j = 0;
     i = 0;
-    while(j < 4){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
+    while(j < 2){//loop over 4 samplings of the phase space, each a factor of x10 larger, to see if the maximum
     //cross section*Brem converges
         cross_max_old = cross_max;
     g25:
         i = 0;
         while(i < itest[j]){//find maximum cross section in allowed phase space
             Egamma = ZBQLUAB(E_lo, E_hi);//get tagged photon energy
-            x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
-            phi1 = 90 * degrad;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
-            phi2 = 270 * degrad;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
+            x = 0.5;//x_min + (x_max - x_min) ZBQLUAB(zlo, zhi)//make a guess for the energy fraction
+            phi1 = 90 * degrad;//2.*pi ZBQLUAB(zlo, zhi)//make a guess for phi1
+            phi2 = 270 * degrad;//2.*pi ZBQLUAB(zlo, zhi)//make a guess for phi2
             xs1 = ZBQLUAB(xs_min, xs_max);
             xs2 = ZBQLUAB(xs_min, xs_max);
             if (phase_space == 0) {// dcos theta/dx = 1
@@ -250,7 +250,7 @@ int main(){
         x_max = (E_coherent - m_part)/E_coherent;
         x_min = m_part/E_coherent;
         total_xscn = 0;
-        while(j < 4){//cross section at the coherent peak converges
+        while(j < 2){//cross section at the coherent peak converges
             cross_sum = 0;
 	        i = 0;
             while(i < itest[j]){
@@ -357,34 +357,55 @@ int main(){
 //		Do all the histogramming
 //      
         if(hist_w) i_array = int(w_mumu/delta_w) + 1;//w distribution;
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
         data_array_w[i_array] = data_array_w[i_array] + 1;
-        //std::cout << i_array << "\n";
 
         if(hist_x) i_array = int(x/delta_x); //x distribution
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
         data_array_x[i_array] = data_array_x[i_array] + 1;
 
         if(hist_t) i_array = int(t/delta_t);//t distribution;
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
         data_array_t[i_array] = data_array_t[i_array] + 1;
 
         if(hist_phi_JT) i_array = int(phi_JT*180/M_PI/delta_phi); //JT phi distribution in degrees;
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
         data_array_phi_JT[i_array] = data_array_phi_JT[i_array] + 1;
 
+        /*
         if(hist_nonlinear_t) i_array = int((pow((t + beta_t), (1 + gamma_t)) - pow(beta_t, (1 - gamma_t)))/(alpha_t * (1 - gamma_t)));  // variable t-bin width
+        std::cout << "nonlint " << i_array << "\n";
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
 	    data_array_nonlinear_t[i_array] = data_array_nonlinear_t[i_array] + 1;
+        /**/
 
-        if(hist_Egamma) i_array = int((Egamma - E_lo)/delta_Egamma);//photon energy distribution;
+        if(hist_log_t) i_array = int((log10(t) + 6.0)/delta_log_t) + 1;
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
+        data_array_log_t[i_array] = data_array_log_t[i_array] + 1;
+
+
+        if(hist_Egamma) i_array = int((Egamma/delta_Egamma)) + 1;//photon energy distribution;
+        if(i_array < 0) i_array = 0;
+        if(i_array > 200) i_array = 200;
+        std::cout << "Egamma " << i_array << "\n";
         data_array_Egamma[i_array] = data_array_Egamma[i_array] + 1;
 
         if(hist_cos) i_array = int((cos_max - cos(theta1))/delta_Egamma);
-        data_array_cos[i_array] = data_array_cos[i_array] + 1;
-
         if(i_array < 0) i_array = 0;
         if(i_array > 200) i_array = 200;
+        std::cout << "cosmax " << i_array << "\n";
+        data_array_cos[i_array] = data_array_cos[i_array] + 1;
+
 
         if(output_event){
             outputFile << Egamma << " " << k10 << " " << k11 << " " << k12 << " " << k20 << " " << k21 << " " << k22 << " " << " " << ktgt[0] << " " << ktgt[1]<< " " << ktgt[2] << " " << "\n";
         }
-        //std::cout << i << "\n";
         if(verbose_output && i % 50 == 0){
             std::cout << " event # " << i << "\n";
         }
@@ -445,6 +466,21 @@ int main(){
         }
         phi_JT_histFile.close();
     }
+
+    if(hist_log_t){
+        i = 0;
+        std::ofstream log_t_histFile;
+        log_t_histFile.open("lepton_log_t.txt");
+        while(i < 200){
+            x_value = pow(10.0, float(i)*delta_log_t - 6.0);
+            error_array[i] = sqrt(data_array_log_t[i])/(pow(10.0, (i+1) * delta_log_t - 6.0) - pow(10.0, (i-1) * delta_log_t - 6.0)) * 2;
+            data_array_log_t[i] = data_array_log_t[i]/(pow(10.0, (i+1) * delta_log_t - 6.0) - pow(10.0, (i-1) * delta_log_t - 6.0)) * 2;
+            log_t_histFile << x_value << " " << data_array_log_t[i] << " " << error_array[i] << "\n";
+            i++;
+        }
+    }
+
+    /*
     if(hist_nonlinear_t == true){
         i = 0;
         std::ofstream nonlinear_t_histFile;
@@ -462,6 +498,8 @@ int main(){
         }
         nonlinear_t_histFile.close();
     }
+    /**/
+
     if(hist_Egamma == true){
         i = 0;
         std::ofstream Egamma_histFile;
@@ -481,7 +519,7 @@ int main(){
         while(i < 200){
             x_value = cos_max - (float(i) - 0.5) * delta_cos;
             error_array[i] = sqrt(data_array_cos[i]);
-            cos_histFile << x_value << " " << data_array_cos[i] << " " << error_array[i];
+            cos_histFile << x_value << " " << data_array_cos[i] << " " << error_array[i] << "\n";
             i++;
         }
         cos_histFile.close();
@@ -693,24 +731,6 @@ double FF(double Q2, int ztgt)
     return returnFF;
 }
 
-double RandomReal(double LowerLimit, double UpperLimit){
-    const gsl_rng_type * T;
-    gsl_rng * r;
-    gsl_rng_env_setup();
-    T = gsl_rng_default;
-    r = gsl_rng_alloc(T);
-
-    struct timeval tv;
-    gettimeofday(&tv,0);
-    unsigned long mySeed = tv.tv_sec + tv.tv_usec;
-    gsl_rng_set(r, mySeed);
-
-    double u = gsl_rng_uniform(r);
-    double result = ((UpperLimit - LowerLimit) * u) + LowerLimit;
-    gsl_rng_free(r);
-
-    return(result);
-}
 
 void ZBQLINI(int seed, double ZBQLIX[43+1], double *bb) {
 
