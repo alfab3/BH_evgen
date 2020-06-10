@@ -1,4 +1,4 @@
-//Date: 6/8/2020 11:52 PM
+//Date: 6/9/2020 8:52 PM
 //	To compile: "g++ lepton_event_v17_5.cpp -lgsl -lgslcblas”
 //	To run: “./a.out”
 #include <stdio.h>
@@ -30,6 +30,9 @@ std::vector<int> EnergyCounts = {0,0,0,0,0,0,0,0,0,0,0,0,811,1699,1770,1852,1917
 struct density_rho0 density_rho0;
 struct Brem_spect brem_spect;
 
+#define _ISEED_ 0
+
+#define _OVERFLOW_PROTECTION_ 1
 
 
 double Brem(bool brem_init, bool cobrems, double E0, double Egamma);
@@ -39,6 +42,9 @@ double analysis(double E0, double mtgt, double missing_mass, double m_part, bool
 double density_init(int ztgt);
 double FF(double Q2, int ztgt);
 double RandomReal(double LowerLimit, double UpperLimit);
+void    ZBQLINI(int seed, double ZBQLIX[43+1], double *bb);
+double  ZBQLUAB(double x1, double x2);
+double  ZBQLU01();
 
 
 
@@ -195,12 +201,12 @@ int main(){
     g25:
         i = 0;
         while(i < itest[j]){//find maximum cross section in allowed phase space
-            Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
+            Egamma = ZBQLUAB(E_lo, E_hi);//get tagged photon energy
             x = 0.5;//x_min + (x_max - x_min) RandomReal(zlo, zhi)//make a guess for the energy fraction
             phi1 = 90 * degrad;//2.*pi RandomReal(zlo, zhi)//make a guess for phi1
             phi2 = 270 * degrad;//2.*pi RandomReal(zlo, zhi)//make a guess for phi2
-            xs1 = RandomReal(xs_min, xs_max);
-            xs2 = RandomReal(xs_min, xs_max);
+            xs1 = ZBQLUAB(xs_min, xs_max);
+            xs2 = ZBQLUAB(xs_min, xs_max);
             if (phase_space == 0) {// dcos theta/dx = 1
                 theta1 = acos(xs1);//make a guess for theta1
                 theta2 = acos(xs2);
@@ -248,11 +254,11 @@ int main(){
             cross_sum = 0;
 	        i = 0;
             while(i < itest[j]){
-                x = x_min + (x_max - x_min) * RandomReal(zlo, zhi);//energy fraction
-                phi1 = 2 * M_PI * RandomReal(zlo, zhi);
-                phi2 = 2 * M_PI * RandomReal(zlo, zhi);
-                xs1 = RandomReal(xs_min, xs_max);
-                xs2 = RandomReal(xs_min, xs_max);
+                x = x_min + (x_max - x_min) * ZBQLUAB(zlo, zhi);//energy fraction
+                phi1 = 2 * M_PI * ZBQLUAB(zlo, zhi);
+                phi2 = 2 * M_PI * ZBQLUAB(zlo, zhi);
+                xs1 = ZBQLUAB(xs_min, xs_max);
+                xs2 = ZBQLUAB(xs_min, xs_max);
                 if (phase_space == 0){// dcos theta/dx = 1
                     theta1 = acos(xs1);
                     theta2 = acos(xs2);
@@ -299,15 +305,15 @@ int main(){
 
     g100:
 
-        Egamma = RandomReal(E_lo, E_hi);//get tagged photon energy
-        x = RandomReal(x_min, x_max);//energy fraction
+        Egamma = ZBQLUAB(E_lo, E_hi);//get tagged photon energy
+        x = ZBQLUAB(x_min, x_max);//energy fraction
         //Test x to make sure it's within the allowed range for the photon energy Egamma
         if(x >= (Egamma - m_part)/Egamma || x <= m_part/Egamma) continue;
 
-        phi1 = 2 * M_PI * RandomReal(zlo, zhi);
-        phi2 = 2 * M_PI * RandomReal(zlo, zhi);
-        xs1 = RandomReal(xs_min, xs_max);
-        xs2 = RandomReal(xs_min, xs_max);
+        phi1 = 2 * M_PI * ZBQLUAB(zlo, zhi);
+        phi2 = 2 * M_PI * ZBQLUAB(zlo, zhi);
+        xs1 = ZBQLUAB(xs_min, xs_max);
+        xs2 = ZBQLUAB(xs_min, xs_max);
 
         if(phase_space == 0){// dcos theta/dx = 1
             theta1 = acos(xs1);
@@ -325,7 +331,7 @@ int main(){
             bad_max = bad_max + 1;//an occurrence of cross section larger than cross_max, not supposed to happen
             std::cout <<  "bad max cross section= " <<  cross_section << "\n";
         }
-        rrz = RandomReal(zlo,zhi);
+        rrz = ZBQLUAB(zlo,zhi);
         cross_test = cross_max * rrz;
         
         if (cross_test > cross_section){//selection fails
@@ -341,7 +347,7 @@ int main(){
         k22in = k22;
 
         analysis(Egamma, mtgt, missing_mass, m_part, pion_hypothesis, &w_mumu, &t, k10in, k11in, k12in, k20in, k21in, k22in);//analyze the event;
-        
+        //std::cout << w_mumu << "\n";
         //if(w_cut && (w_mumu < w_min || w_mumu > w_max)){
         //    goto g100;
         //}
@@ -350,8 +356,9 @@ int main(){
 //  ******************************Event selection succeeds:*********************************************
 //		Do all the histogramming
 //      
-        if(hist_w) i_array = int(w_mumu/delta_w);//w distribution;
+        if(hist_w) i_array = int(w_mumu/delta_w) + 1;//w distribution;
         data_array_w[i_array] = data_array_w[i_array] + 1;
+        //std::cout << i_array << "\n";
 
         if(hist_x) i_array = int(x/delta_x); //x distribution
         data_array_x[i_array] = data_array_x[i_array] + 1;
@@ -377,7 +384,7 @@ int main(){
         if(output_event){
             outputFile << Egamma << " " << k10 << " " << k11 << " " << k12 << " " << k20 << " " << k21 << " " << k22 << " " << " " << ktgt[0] << " " << ktgt[1]<< " " << ktgt[2] << " " << "\n";
         }
-        std::cout << i << "\n";
+        //std::cout << i << "\n";
         if(verbose_output && i % 50 == 0){
             std::cout << " event # " << i << "\n";
         }
@@ -554,6 +561,7 @@ double xsctn(double E0, int ztgt, double x, double theta1, double phi1, double t
     xsctn_point = 2 * pow(alpha,3) * pow(Z, 2) * pow(E0, 4) * pow(x, 2) * pow((1 - x), 2)/(pow(M_PI,2) * pow(q2_T, 2)) * (W_unpol + pol * cos(2 * *phi_JT) * W_pol) * pow(hbarc, 2)/100 * 1e9;
     FF2G = FF2(q2_T,ztgt,nuc_FF);
     xsctnOut = xsctn_point * FF2G;
+    //std::cout << "xsctn " << xsctnOut << "\n";
 //this contains the cos(2phi_JT) term*hbarc**2/100.*1.e9*FF2(q2_T, ztgt, nuc_FF) //units of nb/sr^2 The denominator uses the transverse 3 - momentum transfer^2
     return xsctnOut;
 }
@@ -702,4 +710,87 @@ double RandomReal(double LowerLimit, double UpperLimit){
     gsl_rng_free(r);
 
     return(result);
+}
+
+void ZBQLINI(int seed, double ZBQLIX[43+1], double *bb) {
+
+  static int init = 0;
+  if(init) {
+    if(init==1) printf("***WARNING**** You have called routine ZBQLINI more than once. Ignoring any subsequent calls.\n");
+    ++init;
+    return;
+  } else  {init = 1;}
+
+  double B = 4.294967291e9;
+
+  if(!seed) {
+    struct timespec tt;
+    clock_gettime(CLOCK_REALTIME,&tt);
+    ZBQLIX[1] = fmod(double(tt.tv_nsec)*4.e-9*B,B);
+  } else {
+    ZBQLIX[1] = fmod(double(seed),B);
+  }
+
+  for(int i = 1; i < 43; ++i) ZBQLIX[i+1] = fmod(ZBQLIX[i]*30269.,B);
+
+  *bb = B;
+  return;
+}
+
+//
+//  Returns a uniform random number between 0 & 1, using
+//  a Marsaglia-Zaman type subtract-with-borrow generator
+//
+
+double  ZBQLU01() {
+
+  static int init = 0;
+  static double  ZBQLIX[43+1], B;
+
+  if(!init) {
+    double  zz[43+1], bb;
+    int iseed = _ISEED_; ZBQLINI(iseed,zz,&bb);
+    B = bb;
+    memcpy(ZBQLIX,zz,sizeof(zz));
+    init = 1;
+  }
+
+  static int curpos = 1, id22 = 22, id43 = 43, C = 0.;
+  double x, B2 = B, BINV = 1./B;
+
+  while(1) {
+    x = ZBQLIX[id22] - ZBQLIX[id43] - C;
+    if(x<0.) {x += B; C = 1.;} else {C = 0.;}
+    ZBQLIX[id43] = x;
+    --curpos; --id22; --id43;
+    if(!curpos) {
+      curpos = 43;
+    } else {
+      if(!id22) {id22 = 43;} else {if(!id43) id43 = 43;}
+    }
+    if(x<BINV) {B2 *= B;} else {break;}
+  }
+
+   return x/B2;
+}
+
+//
+//  Returns a random number uniformly distributed on (x1,x2)
+//  Even if x1 > x2, this will work as x2-x1 will then be -ve
+//
+double ZBQLUAB(double x1, double x2) {
+
+  if(x1==x2)
+    printf("****WARNING**** (function ZBQLUAB) Upper and lower limits on uniform distribution are identical\n");
+
+#if _OVERFLOW_PROTECTION_
+  double z = -1.;
+  const double eps = 2.5e-6;
+  while(z<eps||z>1.-eps) z = ZBQLU01();
+  z = x1+(x2-x1)*z;
+#else
+  double z = x1+(x2-x1)*ZBQLU01();
+#endif
+
+  return z;
 }
